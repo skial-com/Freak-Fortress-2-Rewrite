@@ -1,2 +1,4 @@
 build/
 *.smx
+# the root .gitignore ignores *.inc; the legacy includes live here
+!*.inc

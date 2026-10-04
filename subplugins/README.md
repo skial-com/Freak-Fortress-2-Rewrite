@@ -14,4 +14,4 @@ Includes:
 
 Build (also compiles with the SP2 compiler in `sdk/sourcemod-build`):
 
-    spcomp -i scripting/include -i ../Freak-Fortress-2-Rewrite/addons/sourcemod/scripting/thirdparty scripting/freaks/<name>.sp
+    spcomp -i scripting/include -i ../addons/sourcemod/scripting/thirdparty scripting/freaks/<name>.sp
