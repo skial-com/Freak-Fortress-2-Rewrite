@@ -956,7 +956,7 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 								}
 
 								// Don't teleport into spawn rooms
-								if(team1 != team2 && !arena && TF2U_IsInRespawnRoom(target))
+								if(team1 != team2 && !arena && TF2U_IsInRespawnRoom(i))
 									continue;
 
 								if(team1 > TFTeam_Spectator && !SpecTeam && team2 <= TFTeam_Spectator)
@@ -2171,10 +2171,11 @@ Action Timer_RageStunSg(Handle timer, DataPack pack)
 		GetClientEyePosition(client, pos1);
 		
 		int victims;
-		int[] victim = new int[MaxClients - 1];
+		int maxVictims = MaxClients * 4;	// Engineers can build up to 4 each
+		int[] victim = new int[maxVictims];
 		
 		int entity = MaxClients + 1;
-		while((entity = FindEntityByClassname(entity, "obj_*")) != -1)
+		while(victims < maxVictims && (entity = FindEntityByClassname(entity, "obj_*")) != -1)
 		{
 			GetEntityClassname(entity, buffer, sizeof(buffer));
 			if(!StrContains(buffer, "obj_sentrygun"))
@@ -2470,7 +2471,7 @@ Action Timer_RemoveItem(Handle timer, DataPack pack)
 					for(int i; i < length; i++)
 					{
 						int other = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
-						if(other != entity)
+						if(other != -1 && other != entity)
 						{
 							if(HasEntProp(entity, Prop_Send, "m_iWeaponState")) //Reset minigun-like weapons
 							{

@@ -718,6 +718,9 @@ public void FF2R_OnAbility(int client, const char[] ability, AbilityData cfg)
 		else
 		{
 			int range = high - low + 1;
+			if(count > range)
+				count = range;
+			
 			int[] slots = new int[range];
 			
 			for(int i; i < range; i++)
@@ -959,6 +962,8 @@ public void OnClientDisconnect(int client)
 	WallAirMulti[client] = 1.0;
 	WallJumpMulti[client] = 1.0;
 	WallSpeedMulti[client] = 1.0;
+	HookedWeaponSwap[client] = false;	// SDKHooks drops the hook on disconnect
+	RazorbackDeployed[client] = INVALID_ENT_REFERENCE;
 	BodyRef[client] = INVALID_ENT_REFERENCE;
 	HandRef[client] = INVALID_ENT_REFERENCE;
 	WeapRef[client] = INVALID_ENT_REFERENCE;
@@ -1170,7 +1175,7 @@ public void OnPlayerRunCmdPost(int client, int buttons)
 							wasInspect[client] = true;
 						}
 					}
-					else if(!wasInspect[client])
+					else if(wasInspect[client])
 					{
 						hud = true;
 						wasInspect[client] = false;
@@ -1907,6 +1912,9 @@ bool PickupWeaponEntity(int client, int weapon)
 		int entity = SDKCall(SDKGiveNamedItem, client, classname,
 		(class == TFClass_Spy && (StrEqual(classname, "tf_weapon_builder") || StrEqual(classname, "tf_weapon_sapper"))) ? view_as<int>(TFObject_Sapper) : 0,
 		GetEntityAddress(weapon) + view_as<Address>(offset), true);
+		
+		if(entity == -1)
+			return false;
 		
 		if(GetEntProp(entity, Prop_Send, "m_iItemIDHigh") == -1 && GetEntProp(entity, Prop_Send, "m_iItemIDLow") == -1)
 		{

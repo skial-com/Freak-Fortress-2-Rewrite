@@ -924,7 +924,7 @@ public int ShowMenuH(Menu menu, MenuAction action, int client, int selection)
 										{
 											blocked = true;
 										}
-										else if((var1 & MAG_PARTNER) && allies)
+										else if((var1 & MAG_PARTNER) && !allies)
 										{
 											blocked = true;
 										}
@@ -1118,7 +1118,7 @@ public void RefreshSpells(int client, BossData boss, AbilityData ability)
 				if(spell)
 				{
 					int flags = spell.GetInt("flags");
-					if((flags & MAG_PARTNER) && allies)
+					if((flags & MAG_PARTNER) && !allies)
 						continue;
 					
 					if((flags & MAG_LASTLIFE) && boss.GetInt("livesleft", 1) != 1)
@@ -1146,7 +1146,7 @@ public void RefreshSpells(int client, BossData boss, AbilityData ability)
 				if(spell && spell.GetBool("disabled"))
 				{
 					int flags = spell.GetInt("flags");
-					if((flags & MAG_PARTNER) && allies)
+					if((flags & MAG_PARTNER) && !allies)
 						continue;
 					
 					if((flags & MAG_LASTLIFE) && boss.GetInt("livesleft", 1) != 1)
