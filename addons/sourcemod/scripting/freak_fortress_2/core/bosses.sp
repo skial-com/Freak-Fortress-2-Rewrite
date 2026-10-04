@@ -3287,10 +3287,10 @@ static void DisableSubplugins()
 		{
 			PluginsEnabled = false;
 
-			StrCat(folder, sizeof(folder), "\\");
+			int length = strlen(folder);
 
 			ArrayList list = new ArrayList(PLATFORM_MAX_PATH);
-			
+
 			char filename[PLATFORM_MAX_PATH];
 
 			Handle iter = GetPluginIterator();
@@ -3298,7 +3298,9 @@ static void DisableSubplugins()
 			{
 				Handle plugin = ReadPlugin(iter);
 				GetPluginFilename(plugin, filename, sizeof(filename));
-				if(!StrContains(filename, folder, false))
+
+				// Plugin filenames use the platform's path separator
+				if(!strncmp(filename, folder, length, false) && (filename[length] == '/' || filename[length] == '\\'))
 					list.PushString(filename);
 			}
 			delete iter;
