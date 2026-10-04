@@ -448,10 +448,7 @@ public Action:event_round_end(Handle:event, const String:name[], bool:dontBroadc
 			HealBosses_TriggerAMS[client]=false;
 			
 			// Sound Stops
-			StopSound(client, SNDCHAN_AUTO, RAGETHEME);
-			StopSound(client, SNDCHAN_AUTO, NORMALTHEME);
-			StopSound(client, SNDCHAN_AUTO, LIFELOSETHEME);
-			StopSound(client, SNDCHAN_AUTO, FEWPLAYERSTHEME);
+			StopThemes(client);
 		}
 	}
 	CreateTimer(0.5, StopMusic);
@@ -471,6 +468,22 @@ public Action:event_round_end(Handle:event, const String:name[], bool:dontBroadc
 	StopMusic_FewPlayerVersion = 0;
 }
 
+// Only stop themes that were set, stopping an empty or unprecached sound spams the console
+stock StopThemes(client)
+{
+	if(RAGETHEME[0])
+		StopSound(client, SNDCHAN_AUTO, RAGETHEME);
+	
+	if(NORMALTHEME[0])
+		StopSound(client, SNDCHAN_AUTO, NORMALTHEME);
+	
+	if(LIFELOSETHEME[0])
+		StopSound(client, SNDCHAN_AUTO, LIFELOSETHEME);
+	
+	if(FEWPLAYERSTHEME[0])
+		StopSound(client, SNDCHAN_AUTO, FEWPLAYERSTHEME);
+}
+
 public Action:StopMusic(Handle:timer)
 {
 	for(new client=1;client<=MaxClients;client++)
@@ -478,10 +491,7 @@ public Action:StopMusic(Handle:timer)
 		if (IsClientInGame(client))
 		{
 			// Sound Stops
-			StopSound(client, SNDCHAN_AUTO, RAGETHEME);
-			StopSound(client, SNDCHAN_AUTO, NORMALTHEME);
-			StopSound(client, SNDCHAN_AUTO, LIFELOSETHEME);
-			StopSound(client, SNDCHAN_AUTO, FEWPLAYERSTHEME);
+			StopThemes(client);
 		}
 	}
 	return Plugin_Continue;
