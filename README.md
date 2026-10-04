@@ -25,6 +25,7 @@ Supported:
 - [SM-TFCustomWeaponsX](https://github.com/nosoop/SM-TFCustomWeaponsX) (Weapon Config Section)
 - [Custom Weapons 3](https://forums.alliedmods.net/showthread.php?t=285258) (Weapon Config Section)
 - [Goomba](https://github.com/Flyflo/SM-Goomba-Stomp-Addons) (Boss Supported)
+- FF2R Hooks (`ff2r_hooks.ext.so`, Linux x64) (Native hooks, DHooks is used as a fallback without it)
 
 ## Credits
 

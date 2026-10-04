@@ -131,12 +131,12 @@
 #include <sourcemod>
 #include <sdkhooks>
 #include <tf2_stocks>
-#include <dhooks>
 #include <adt_trie_sort>
 #include <cfgmap>
 #include <tf_econ_data>
 #undef REQUIRE_EXTENSIONS
 #undef REQUIRE_PLUGIN
+#include <dhooks>
 #include <ff2r>
 #tryinclude <tf_ontakedamage>
 
@@ -144,6 +144,18 @@
 #pragma newdecls required
 
 #define PLUGIN_VERSION	"Custom"
+
+#define DHOOKS_LIBRARY		"dhooks"
+#define EXTHOOKS_LIBRARY	"ff2r_hooks"
+
+// Autoload the optional ff2r_hooks extension, DHooks is used as a fallback without it
+public Extension __ext_ff2r_hooks =
+{
+	name = "FF2R Hooks",
+	file = "ff2r_hooks.ext",
+	autoload = 1,
+	required = 0,
+};
 
 #define MAXTF2PLAYERS	MAXPLAYERS+1
 #define FAR_FUTURE		100000000.0
@@ -210,6 +222,8 @@ Handle SDKSetSpeed;
 int PlayersAlive[4];
 Handle SyncHud;
 bool OTDLoaded;
+bool ExtHooksLoaded;
+bool AirDashDetoured;
 
 ConVar CvarDebug;
 ConVar CvarCheats;
@@ -357,7 +371,9 @@ public void OnPluginStart()
 			LogError("[Gamedata] Could not find CTFPlayer::TeamFortress_SetSpeed");
 	}
 	
-	CreateDetour(gamedata, "CTFPlayer::CanAirDash", CanAirDashPre, CanAirDashPost);
+	ExtHooksLoaded = LibraryExists(EXTHOOKS_LIBRARY);
+	if(!ExtHooksLoaded)
+		SetupAirDashDetour(gamedata);
 	
 	delete gamedata;
 	
@@ -380,6 +396,25 @@ public void OnPluginStart()
 	OTDLoaded = LibraryExists(OTD_LIBRARY);
 
 	Subplugin_PluginStart();
+}
+
+void SetupAirDashDetourFromConf()
+{
+	if(!AirDashDetoured && LibraryExists(DHOOKS_LIBRARY))
+	{
+		GameData gamedata = new GameData("ff2");
+		SetupAirDashDetour(gamedata);
+		delete gamedata;
+	}
+}
+
+void SetupAirDashDetour(GameData gamedata)
+{
+	if(!AirDashDetoured && LibraryExists(DHOOKS_LIBRARY))
+	{
+		AirDashDetoured = true;
+		CreateDetour(gamedata, "CTFPlayer::CanAirDash", CanAirDashPre, CanAirDashPost);
+	}
 }
 
 void CreateDetour(GameData gamedata, const char[] name, DHookCallback preCallback = INVALID_FUNCTION, DHookCallback postCallback = INVALID_FUNCTION)
@@ -855,6 +890,16 @@ public void OnLibraryAdded(const char[] name)
 	TF2U_LibraryAdded(name);
 	VScript_LibraryAdded(name);
 
+	if(!ExtHooksLoaded && StrEqual(name, EXTHOOKS_LIBRARY))
+	{
+		// Leftover DHooks detour is ignored while the extension is active
+		ExtHooksLoaded = true;
+	}
+	else if(!ExtHooksLoaded && StrEqual(name, DHOOKS_LIBRARY))
+	{
+		SetupAirDashDetourFromConf();
+	}
+
 	if(!OTDLoaded && StrEqual(name, OTD_LIBRARY))
 	{
 		OTDLoaded = true;
@@ -873,6 +918,17 @@ public void OnLibraryRemoved(const char[] name)
 	Subplugin_LibraryRemoved(name);
 	TF2U_LibraryRemoved(name);
 	VScript_LibraryRemoved(name);
+
+	if(ExtHooksLoaded && StrEqual(name, EXTHOOKS_LIBRARY))
+	{
+		// Extension went away, fall back to DHooks
+		ExtHooksLoaded = false;
+		SetupAirDashDetourFromConf();
+	}
+	else if(StrEqual(name, DHOOKS_LIBRARY))
+	{
+		AirDashDetoured = false;
+	}
 
 	if(OTDLoaded && StrEqual(name, OTD_LIBRARY))
 	{
@@ -1770,25 +1826,61 @@ Action FirstPersonTransmit(int entity, int client)
 
 public MRESReturn CanAirDashPre(int client, DHookReturn ret)
 {
-	if(WallJumper[client] && WallLagComped[client])
-	{
-		WallLagComped[client] = false;
-		SetEntProp(client, Prop_Send, "m_iAirDash", GetEntProp(client, Prop_Send, "m_iAirDash") + 1);
-	}
+	if(!ExtHooksLoaded)
+		AirDashPre(client);
+	
 	return MRES_Ignored;
 }
 
 public MRESReturn CanAirDashPost(int client, DHookReturn ret)
 {
-	if(WallJumper[client])
+	if(!ExtHooksLoaded)
 	{
-		if(JumperTestJump(client, ret.Value))
+		bool result = ret.Value;
+		if(AirDashPost(client, result))
 		{
-			ret.Value = true;
+			ret.Value = result;
 			return MRES_Override;
 		}
 	}
 	return MRES_Ignored;
+}
+
+public void FF2Ext_OnCanAirDash(int client)
+{
+	if(ExtHooksLoaded)
+		AirDashPre(client);
+}
+
+public Action FF2Ext_OnCanAirDashPost(int client, bool &result)
+{
+	if(ExtHooksLoaded && AirDashPost(client, result))
+		return Plugin_Changed;
+	
+	return Plugin_Continue;
+}
+
+static void AirDashPre(int client)
+{
+	if(WallJumper[client] && WallLagComped[client])
+	{
+		WallLagComped[client] = false;
+		SetEntProp(client, Prop_Send, "m_iAirDash", GetEntProp(client, Prop_Send, "m_iAirDash") + 1);
+	}
+}
+
+// Returns true if result was overriden
+static bool AirDashPost(int client, bool &result)
+{
+	if(WallJumper[client])
+	{
+		if(JumperTestJump(client, result))
+		{
+			result = true;
+			return true;
+		}
+	}
+	return false;
 }
 
 bool PickupWeaponEntity(int client, int weapon)

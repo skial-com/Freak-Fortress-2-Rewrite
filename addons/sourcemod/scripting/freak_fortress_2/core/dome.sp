@@ -86,6 +86,16 @@ void Dome_MapStart()
 	}
 }
 
+// Returns the dome prop entity index, -1 if none
+int Dome_GetProp()
+{
+	if(!DomeEntRef)
+		return -1;
+	
+	int entity = EntRefToEntIndex(DomeEntRef);
+	return entity > MaxClients ? entity : -1;
+}
+
 bool Dome_Enabled()
 {
 	return (Enabled && DomeAssets && Cvar[CaptureDome].FloatValue > 0.0);

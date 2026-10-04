@@ -15,6 +15,15 @@
 #include <adminmenu>
 #include <ff2r>
 
+// Autoload the optional ff2r_hooks extension, DHooks is used as a fallback without it
+public Extension __ext_ff2r_hooks =
+{
+	name = "FF2R Hooks",
+	file = "ff2r_hooks.ext",
+	autoload = 1,
+	required = 0,
+};
+
 #pragma semicolon 1
 #pragma newdecls required
 
@@ -168,6 +177,7 @@ Handle ThisPlugin;
 #include "freak_fortress_2/core/convars.sp"
 #include "freak_fortress_2/customattrib.sp"
 #include "freak_fortress_2/core/database.sp"
+#include "freak_fortress_2/core/exthooks.sp"
 #include "freak_fortress_2/core/dhooks.sp"
 #include "freak_fortress_2/core/dome.sp"
 #include "freak_fortress_2/econdata.sp"
@@ -213,6 +223,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	ThisPlugin = myself;
 	
 	CustomAttrib_PluginLoad();
+	ExtHooks_PluginLoad();
 	Forward_PluginLoad();
 	ForwardOld_PluginLoad();
 	Native_PluginLoad();
@@ -320,6 +331,7 @@ public void OnConfigsExecuted()
 public void OnMapEnd()
 {
 	Bosses_MapEnd();
+	DHook_MapEnd();
 	FileNet_MapEnd();
 	Gamemode_MapEnd();
 	Preference_MapEnd();
