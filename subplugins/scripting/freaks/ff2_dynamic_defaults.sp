@@ -1851,7 +1851,7 @@ public bool:DP_AttemptLatch(clientIdx)
 				
 				// first we need to trace a little to the sides
 				static Float:tmpAngle[3];
-				CopyVector(angle, tmpAngle);
+				CopyVector(tmpAngle, angle);
 				tmpAngle[1] = fixAngle(tmpAngle[1] + (pass == 0 ? 90.0 : -90.0));
 				static Float:adjHeadPos[3];
 				static Float:adjFeetPos[3];
