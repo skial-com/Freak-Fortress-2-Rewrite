@@ -178,7 +178,7 @@ public void CastSpell(int client, int Spellsnumber)
 	}
 }
 
-int ShootProjectile(int iClient, char strEntname[48] = "")
+int ShootProjectile(int iClient, const char[] strEntname)
 {
 	float flAng[3]; // original
 	float flPos[3]; // original
