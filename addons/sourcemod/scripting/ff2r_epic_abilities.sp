@@ -1783,7 +1783,7 @@ void RemoveRenderMode(int client, bool models)
 	if(BodyRef[client] != INVALID_ENT_REFERENCE)
 	{
 		int entity = EntRefToEntIndex(BodyRef[client]);
-		if(entity == INVALID_ENT_REFERENCE)
+		if(entity != INVALID_ENT_REFERENCE)
 			TF2_RemoveWearable(client, entity);
 		
 		if(models)
@@ -2300,7 +2300,14 @@ Action StealingTraceAttack(int victim, int &attacker, int &inflictor, float &dam
 								GetClientAbsOrigin(attacker, pos);
 								GetClientAbsAngles(attacker, ang);
 								
-								SetEntProp(index, Prop_Send, "m_iPlayerIndex", attacker);
+								if(HasEntProp(index, Prop_Send, "m_hPlayer"))
+								{
+									SetEntPropEnt(index, Prop_Send, "m_hPlayer", attacker);
+								}
+								else
+								{
+									SetEntProp(index, Prop_Send, "m_iPlayerIndex", attacker);
+								}
 								SetEntProp(index, Prop_Send, "m_iTeam", GetClientTeam(attacker));
 								SetEntProp(index, Prop_Send, "m_iClass", TF2_GetPlayerClass(attacker));
 								SetEntProp(index, Prop_Send, "m_bOnGround", 1);
