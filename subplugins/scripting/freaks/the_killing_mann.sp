@@ -34,7 +34,11 @@ public void OnPluginStart2()
 	
 	HookEvent("teamplay_round_win", event_round_end, EventHookMode_PostNoCopy);
 	HookEvent("arena_win_panel", event_round_end, EventHookMode_PostNoCopy);
-	
+}
+
+public void OnMapStart()
+{
+	// also runs on late load; the plugin can stay loaded across map changes
 	PrecacheSound(LIFELOSE_THEME);
 }
 
@@ -43,16 +47,16 @@ public Action event_round_start(Event event, const char[] name, bool dontBroadca
 	if(!FF2_IsFF2Enabled() || FF2_GetRoundState()!=1)
 		return Plugin_Continue;
 	
+	killing_mann_life = 0;
 	for(int clientIdx=1; clientIdx <= MaxClients; clientIdx++)
 	{
-		if(!IsValidClient(clientIdx))
-			continue;
-		
-		killing_mann_life = 0;
 		SpellHudNotificationAt[clientIdx]=FAR_FUTURE;
 		SpellsCooldownEndsIn[clientIdx]=FAR_FUTURE;
 		HasSpellAbility[clientIdx]=false;
 		SpellsAreOnCoolDown[clientIdx]=false;
+		
+		if(!IsValidClient(clientIdx))
+			continue;
 		
 		int bossIdx=FF2_GetBossIndex(clientIdx); // Well this seems to be the solution to make it multi-boss friendly
 		if(bossIdx>=0)
@@ -80,9 +84,12 @@ public void OnGameFrame()
 
 public void SpellsTick(float currentTime)
 {
+	if(FF2_GetRoundState()!=1 || !FF2_IsFF2Enabled())
+		return;
+	
 	for(int clientIdx=1;clientIdx<=MaxClients;clientIdx++)
 	{
-		if(!IsValidClient(clientIdx)|| FF2_GetRoundState()!=1 || !FF2_IsFF2Enabled())
+		if(!HasSpellAbility[clientIdx] || !IsValidClient(clientIdx))
 			continue;
 		
 		if(currentTime>=SpellsCooldownEndsIn[clientIdx])
@@ -112,6 +119,9 @@ public void SpellsTick(float currentTime)
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
 {
+	if(!HasSpellAbility[client])
+		return Plugin_Continue;
+	
 	int bossIdx=FF2_GetBossIndex(client);
 	if(bossIdx>=0 && FF2_HasAbility(bossIdx, this_plugin_name, SPECIALSPELLS))
 	{
@@ -126,7 +136,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 					case 2: buttons &= ~IN_ATTACK3;
 				}
 				SetHudTextParams(-1.0, 0.96, 3.0, 255, 0, 0, 255);
-				ShowHudText(client, -1, SpellsHUDText[bossIdx][0]);	
+				ShowHudText(client, -1, SpellsHUDText[client][0]);	
 				return Plugin_Changed;
 			}
 			
@@ -138,7 +148,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 					case 2: buttons &= ~IN_ATTACK3;
 				}
 				SetHudTextParams(-1.0, 0.96, 3.0, 255, 0, 0, 255);
-				ShowHudText(client, -1, SpellsHUDText[bossIdx][5], RoundFloat(Spellragecost[client]));	
+				ShowHudText(client, -1, SpellsHUDText[client][5], RoundFloat(Spellragecost[client]));	
 				return Plugin_Changed;
 			}
 			

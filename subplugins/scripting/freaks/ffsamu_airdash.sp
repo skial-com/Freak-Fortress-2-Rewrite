@@ -65,6 +65,7 @@
 new Handle:g_hRechargeHandle[MAXPLAYERARRAY];
 new Handle:g_hDashReadyHandle[MAXPLAYERARRAY];
 new bool:g_bClientDash[MAXPLAYERARRAY];
+new bool:g_bHasDash[MAXPLAYERARRAY]; // boss has ff2_airdash_HUD this round; lets OnPlayerRunCmd skip everyone else
 new bool:g_bDashReady[MAXPLAYERARRAY];
 new Float:g_fDashCooldown[MAXPLAYERARRAY];
 new g_Override[MAXPLAYERARRAY];
@@ -127,6 +128,7 @@ public Action OnRoundStart(Handle event, const String:name[], bool dontBroadcast
 		g_hRechargeHandle[client] = INVALID_HANDLE;
 		g_hDashReadyHandle[client] = INVALID_HANDLE;
 		g_GlideState[client] = 0;
+		g_bHasDash[client] = false;
 		
 		if (IsValidClient(client))
 		{
@@ -180,9 +182,10 @@ public Action OnRoundStart(Handle event, const String:name[], bool dontBroadcast
 				    FF2_GetAbilityArgumentString(boss, this_plugin_name, SAMU_STRING, 23, DashesAvailable, sizeof(DashesAvailable));
 				    FF2_GetAbilityArgumentString(boss, this_plugin_name, SAMU_STRING, 24, DashRecharged, sizeof(DashRecharged));
 				    
-					CreateTimer(g_DelayBeforeEnabled[client], t_EnableDash, client, TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(g_DelayBeforeEnabled[client], t_EnableDash, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
 					g_bDashReady[client] = true;
+					g_bHasDash[client] = true;
 				}
 			}
 		}
@@ -200,6 +203,19 @@ public OnMapStart()
 	}
 }
 
+public OnClientDisconnect(client)
+{
+	// the recharge chain prints to the client, and a new player in this slot must not inherit the boss's dashes
+	if(g_hRechargeHandle[client] != INVALID_HANDLE)
+		KillTimer(g_hRechargeHandle[client]);
+	if(g_hDashReadyHandle[client] != INVALID_HANDLE)
+		KillTimer(g_hDashReadyHandle[client]);
+	g_hRechargeHandle[client] = INVALID_HANDLE;
+	g_hDashReadyHandle[client] = INVALID_HANDLE;
+	g_bClientDash[client] = false;
+	g_bHasDash[client] = false;
+}
+
 public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	for(new client = 1; client <= MaxClients; client++)
@@ -209,10 +225,14 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action:t_EnableDash(Handle:timer, int client)
+public Action:t_EnableDash(Handle:timer, int userid)
 {
+	  int client = GetClientOfUserId(userid);
+	  if(!client)
+	      return Plugin_Continue;
+	  
 	  g_bClientDash[client] = true;
-      PrintCenterText(client, DashesAvailable);
+      PrintCenterText(client, "%s", DashesAvailable);
 	
 	  return Plugin_Continue;
 }
@@ -229,7 +249,7 @@ public Action:t_AddCharge(Handle:timer, int client)
 		
 	 // center message bc still no hud cooldown
 	 // however you can edit what it says through args, yay
-    PrintCenterText(client, DashRecharged);
+    PrintCenterText(client, "%s", DashRecharged);
 		
 	return Plugin_Continue;
 }
@@ -262,6 +282,10 @@ public Action Command_DropItem(int client, const char[] command, int argc)
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {
+	// runs for every player every tick; only airdash bosses do anything below
+	if(!g_bHasDash[client])
+		return Plugin_Continue;
+	
 	if(IsValidClient(client))
 	{
 		new flags = GetEntityFlags(client);
@@ -271,8 +295,6 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		{
 			// If you came here to understand how this works
 			// Good fucking luck
-			
-			new Float:rage = FF2_GetBossCharge(boss, 0);
 			
 			if(flags & FL_ONGROUND)
 			{
@@ -312,6 +334,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 			
 			if((buttons & D_Key[client]) && (g_bClientDash[client]))
 			{
+				new Float:rage = FF2_GetBossCharge(boss, 0); // walks every client in FF2R; only needed when the key is held
 				if(!(g_GlideState[client]) && (g_Charges[client] > 0) && (rage >= g_fRageCost[client]) && (g_bDashReady[client]) && (g_AirTime[client] >= g_MinAirTime[client]))
 				{
 					decl Float:eyeAng[3];

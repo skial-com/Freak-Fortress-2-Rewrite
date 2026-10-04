@@ -87,13 +87,18 @@ public Action:Setupbomb(Handle timer, disp)
 		float vecOrigin[3];
 		GetEntPropVector(disp, Prop_Data, "m_vecOrigin", vecOrigin);
 		int iBomb = CreateEntityByName("tf_generic_bomb");
+		if (iBomb == -1)
+			return;
+		
+		// the boss may have left during the countdown; SDKHooks_TakeDamage throws on a client that is not in game
+		int attacker = IsValidClient(Boss) ? Boss : 0;
 		DispatchKeyValueVector(iBomb, "origin", vecOrigin);
 		DispatchKeyValueFloat(iBomb, "damage", damages);
 		DispatchKeyValueFloat(iBomb, "radius", radiuss);
 		DispatchKeyValue(iBomb, "health", "1");
 		
 		DispatchSpawn(iBomb);
-		SDKHooks_TakeDamage(iBomb, Boss, Boss, 5.0);
+		SDKHooks_TakeDamage(iBomb, attacker, attacker, 5.0);
 		AcceptEntityInput(iBomb, "Detonate");
 		AcceptEntityInput(iBomb, "Kill");
 	}
@@ -128,6 +133,9 @@ public Action:ChangedispC2(Handle timer, disp)
 public Action:totemcondm(Handle timer, disp)
 {
 	disp = EntRefToEntIndex(disp);
+	if (!IsValidClient(Boss)) // GetClientTeam below throws once the boss has left
+		return;
+	
 	new Float:pos[3], Float:pos2[3], Float:dista;
 	if (IsValidEntity(disp) == true)
 	{
@@ -218,6 +226,9 @@ public Action:totemcondm(Handle timer, disp)
 public Action:totemcondb(Handle timer, disp)
 {
 	disp = EntRefToEntIndex(disp);
+	if (!IsValidClient(Boss)) // GetClientTeam below throws once the boss has left
+		return;
+	
 	new Float:pos[3], Float:pos2[3], Float:dist;
 	if (IsValidEntity(disp) == true)
 	{
@@ -268,7 +279,7 @@ public Action:totemcondb(Handle timer, disp)
 				CreateTimer(0.5, totemcondb, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 4:
 				CreateTimer(0.5, totemcondb, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
-			case 6:
+			case 5: // was case 6, which has no effect; speed buff (5) applied once and stopped
 				CreateTimer(0.5, totemcondb, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}

@@ -69,6 +69,13 @@ public void OnPluginEnd()
 	}
 }
 
+public void OnClientDisconnect(int clientIdx)
+{
+	// the slot may be reused before the boss dies; don't kill whoever takes it
+	for(int boss = 1; boss <= MaxClients; boss++)
+		DieOnDeath[boss][clientIdx] = false;
+}
+
 public void FF2R_OnBossRemoved(int clientIdx)
 {
 	for(int target = 0; target <= MaxClients; target++)
@@ -85,10 +92,6 @@ public void Event_OnPlayerDeath(Event event, const char[] name, bool dontBroadca
 {	
 	int clientIdx = GetClientOfUserId(event.GetInt("userid"));
 	if(!IsValidClient(clientIdx))
-		return;
-	
-	int attackerIdx = GetClientOfUserId(event.GetInt("attacker"));	// Not necessarily needed if abilities are not effecting players
-	if(!IsValidClient(attackerIdx))
 		return;
 	
 	if(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER)
@@ -110,6 +113,11 @@ public void Event_OnPlayerDeath(Event event, const char[] name, bool dontBroadca
 			}
 		}
 	}
+	
+	// checked after the boss-death cleanup so clones still die when the boss dies to the world or suicides
+	int attackerIdx = GetClientOfUserId(event.GetInt("attacker"));
+	if(!IsValidClient(attackerIdx))
+		return;
 	
 	BossData boss = FF2R_GetBossData(attackerIdx);
 	if(boss)
@@ -134,6 +142,8 @@ public Action Timer_Respawn(Handle timer, DataPack pack)
 	if(targetIdx && IsValidClient(targetIdx) && clientIdx && IsValidClient(clientIdx) && IsPlayerAlive(clientIdx))
 	{
 		AbilityData ability = FF2R_GetBossData(clientIdx).GetAbility("clone_on_death");
+		if(!ability.IsMyPlugin())
+			return Plugin_Continue;	// no longer this boss (removed or replaced in the last 0.1s)
 		
 		DieOnDeath[clientIdx][targetIdx] = ability.GetBool("die on boss death", true);
 		ConfigData minion = ability.GetSection("character");

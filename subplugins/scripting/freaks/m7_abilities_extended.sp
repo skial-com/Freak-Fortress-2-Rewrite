@@ -144,6 +144,12 @@ public OnPluginStart2()
 }
 
 
+public OnClientPutInServer(client)
+{
+	VOMode[client]=VoiceMode_Normal;
+	SummonerIndex[client]=-1;
+}
+
 public Action:event_round_start(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if(!FF2_IsFF2Enabled() || FF2_GetRoundState()!=1)
@@ -287,10 +293,11 @@ public Action:event_player_death(Handle:event, const String:name[], bool:dontBro
 			static String:weaponName[MAX_WEAPON_NAME_LENGTH];
 			static String:weaponArgs[MAX_WEAPON_ARG_LENGTH];
 			
+			MWS_WeaponCount[attacker] = min(FF2_GetAbilityArgument(boss, this_plugin_name, MULTIWEAPONS, 1), MWS_MAX_WEAPONS);
+			
 			new rand = GetRandomInt(0, MWS_WeaponCount[attacker] - 1);
 			new argOffset = (rand + 1) * 10;
 			
-			MWS_WeaponCount[attacker] = FF2_GetAbilityArgument(boss, this_plugin_name, MULTIWEAPONS, 1);
 			new bool:Allweaponsgone = bool:FF2_GetAbilityArgument(boss, this_plugin_name, MULTIWEAPONS, 2);
 			
 			FF2_GetAbilityArgumentString(boss, this_plugin_name, MULTIWEAPONS, argOffset + 1, weaponName, MAX_WEAPON_NAME_LENGTH);
@@ -301,7 +308,6 @@ public Action:event_player_death(Handle:event, const String:name[], bool:dontBro
 			new clip = FF2_GetAbilityArgument(boss, this_plugin_name, MULTIWEAPONS, argOffset + 7);
 			new ammo = FF2_GetAbilityArgument(boss, this_plugin_name, MULTIWEAPONS, argOffset + 8);
 			
-			MWS_WeaponCount[attacker] = min(MWS_WeaponCount[attacker], MWS_MAX_WEAPONS);
 			for (new i = 0; i < MWS_WeaponCount[attacker]; i++)
 			{
 				new offset = (10 * (i + 1));
@@ -381,12 +387,10 @@ public Action:event_player_death(Handle:event, const String:name[], bool:dontBro
 		{
 			Float:amountgainedrage = FF2_GetAbilityArgumentFloat(boss,this_plugin_name,RAGEONKILL,1,0.0);
 			new Float:rage = FF2_GetBossCharge(boss,0);
-			new Float:ragetogive;
+			new Float:ragetogive = rage + amountgainedrage;
 		
-			if(rage + amountgainedrage > 100.0) // We don't want RAGE to exceed more than 100%
+			if(ragetogive > 100.0) // We don't want RAGE to exceed more than 100%
 				ragetogive = 100.0;
-			else if (rage + amountgainedrage < 100.0)
-				ragetogive = rage+amountgainedrage;
 		
 			FF2_SetBossCharge(boss, 0, ragetogive);
 		}
@@ -442,6 +446,9 @@ public Action:event_round_end(Handle:event, const String:name[], bool:dontBroadc
 			//for Special_Fire
 			Fire_TriggerAMS[client] = false;
 			SDKUnhook(client, SDKHook_PreThink, Fire_Prethink);
+			
+			//for Special_Stun
+			SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			
 			// for Healing and Reviving abilities
 			ReviveBosses_TriggerAMS[client]=false;

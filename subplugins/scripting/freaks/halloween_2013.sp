@@ -983,7 +983,7 @@ public Action:OnBerserkTouch( prop, entity )
         if (weapon != -1)
         {
             decl String:classname[32];
-            if(GetEntityClassname(weapon, classname, 64))
+            if(GetEntityClassname(weapon, classname, sizeof(classname)))
             {
                 TF2_RemoveWeaponSlot(entity, 0);
                 TF2_RemoveWeaponSlot(entity, 1);
@@ -1149,7 +1149,7 @@ public Action:OnBerserkTouchOnce( prop, entity )
         if (weapon != -1)
         {
             decl String:classname[32];
-            if(GetEntityClassname(weapon, classname, 64))
+            if(GetEntityClassname(weapon, classname, sizeof(classname)))
             {
                 TF2_RemoveWeaponSlot(entity, 0);
                 TF2_RemoveWeaponSlot(entity, 1);
@@ -1624,7 +1624,7 @@ Rage_UsePredator(const String:ability_name[],index)
 public Action:Timer_Predator(Handle:timer, any:userid)
 {
     new boss = GetClientOfUserId(userid);
-    if(boss == g_boss && IsClientInGame(boss))
+    if(boss && boss == g_boss && IsClientInGame(boss))
     {
         if(gb_predator && IsPlayerAlive(boss))
         {
@@ -1788,7 +1788,7 @@ Rage_UseSkulls(const String:ability_name[],index)
 public Action:Timer_Skulls(Handle:timer, any:userid)			// Updates boss rage stuffs
 {
     new boss = GetClientOfUserId(userid);
-    if(boss == g_boss && IsClientInGame(boss))
+    if(boss && boss == g_boss && IsClientInGame(boss))
     {
         if(gb_Skulls && IsPlayerAlive(boss))
         {

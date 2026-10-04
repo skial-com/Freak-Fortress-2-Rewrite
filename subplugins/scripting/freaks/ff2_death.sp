@@ -456,7 +456,7 @@ public Action Event_PlayerDeath(Event hEvent, const char[] strName, bool bDontBr
 
 		DataPack hData;
 		CreateDataTimer(0.01, Timer_DissolveRagdoll, hData);
-		hData.WriteCell(iVictim);
+		hData.WriteCell(GetClientUserId(iVictim));
 		hData.WriteCell(0);
 	}
 	return Plugin_Continue;
@@ -644,10 +644,14 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float vV
 	if(!IsValidClient(iClient, true, true))
 		return Plugin_Continue;
 	
+	// runs for every player every tick; FF2_HasAbility(-1, ...) scans all clients, so skip non-bosses first
+	int iBoss = FF2_GetBossIndex(iClient);
+	if(iBoss == -1)
+		return Plugin_Continue;
+	
 	if(!FF2_IsFF2Enabled() || FF2_GetRoundState() != 1)
 		return Plugin_Continue;
 	
-	int iBoss = FF2_GetBossIndex(iClient);
 	if(FF2_HasAbility(iBoss, this_plugin_name, "rage_heffe"))
 	{
 		if(!FF2_IsFF2Enabled() || FF2_GetRoundState() != 1)
@@ -808,7 +812,9 @@ void Rage_Wanker(int iBoss)
 		SpawnWeapon(iClient, "tf_weapon_jar", 58, 100, 5, "149 ; 30.0 ; 134 ; 12.0", true, true);
 		//149 - 30 second bleed
 		//134 - Applies particle of id 12
-	SetAmmo(iClient, TFWeaponSlot_Secondary, WankerAmmo[iClient]);
+	int iJar = GetPlayerWeaponSlot(iClient, TFWeaponSlot_Secondary);
+	if(iJar != -1)
+		SetAmmo(iClient, iJar, WankerAmmo[iClient]);
 }
 
 void Rage_Heffe(int iBoss, const char[] ability_name)
@@ -841,7 +847,7 @@ void Rage_TheRock(int iBoss)
 		SDKHook(iClient, SDKHook_StartTouch, OnRockTouch);
 		TF2_AddCondition(iClient, TFCond_MegaHeal, Rockduration[iClient]);
 		TF2_AddCondition(iClient, TFCond_SpeedBuffAlly, Rockduration[iClient]);
-		CreateTimer(Rockduration[iClient], UnHook, iClient);
+		CreateTimer(Rockduration[iClient], UnHook, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 		SetEntProp(iClient, Prop_Send, "m_CollisionGroup", 2);
 	}
 }
@@ -935,7 +941,7 @@ void Charge_RocketSpawn(int iBoss, int iSlot, int iAction)	// Shamelessly stolen
 		{
 			SetHudTextParams(-1.0, 0.93, 0.15, 255, 255, 255, 255);
 			if(flCharge+1 < RocketCharge[iClient])
-				FF2_SetBossCharge(iClient, iSlot, flCharge+1);
+				FF2_SetBossCharge(iBoss, iSlot, flCharge+1);
 			else
 				flCharge = RocketCharge[iClient];
 			ShowSyncHudText(iClient, chargeHUD, "Your charged ability will be available in %i second(s).", RoundFloat(flCharge*100/RocketCharge[iClient]));
@@ -1053,8 +1059,9 @@ public Action RemoveEnt(Handle hTimer, any entid)
 		SwitchtoSlot(iClient, 2);
 }*/
 
-public Action UnHook(Handle hTimer, any Boss)
+public Action UnHook(Handle hTimer, any userid)
 {
+	int Boss = GetClientOfUserId(userid);
 	if(IsValidClient(Boss))
 	{
 		SDKUnhook(Boss, SDKHook_StartTouch, OnRockTouch);
@@ -1198,8 +1205,13 @@ public Action Timer_DissolveRagdoll(Handle hTimer, Handle pack)
 public void NoRage_Think(iClient)
 {
 	if(!FF2_IsFF2Enabled() || FF2_GetRoundState()!=1)
+	{
 		SDKUnhook(iClient, SDKHook_PreThink, NoRage_Think);
-	FF2_SetBossCharge(iClient, 0, 0.0);
+		return;
+	}
+	int iBoss = FF2_GetBossIndex(iClient);
+	if(iBoss != -1)
+		FF2_SetBossCharge(iBoss, 0, 0.0);
 }
 
 public void Heffe_HUD(int iClient)
@@ -1233,7 +1245,7 @@ public void OnRockTouch(int Boss, int iEntity)
 {
 	if(GetClientTeam(Boss) != BossTeam)
 	{
-		SDKUnhook(Boss, SDKHook_Touch, OnRockTouch);
+		SDKUnhook(Boss, SDKHook_StartTouch, OnRockTouch);
 		return;
 	}
 

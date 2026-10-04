@@ -143,7 +143,10 @@ public void FF2R_OnBossCreated(int clientIdx, BossData cfg, bool setup)
 		RemoveCondition(clientIdx, buffer);
 		AddCondition(clientIdx, buffer);
 	}
-		
+	
+	// stored for respawn/removal even when nobody is on that team yet; otherwise the previous boss's lists stick
+	ability.GetString("allyconds", TWEAK_AllyConditions[clientIdx], sizeof(TWEAK_AllyConditions[]));
+	ability.GetString("enemyconds", TWEAK_EnemyConditions[clientIdx], sizeof(TWEAK_EnemyConditions[]));
 		
 	for(int victim = 1; victim <= MaxClients; victim++)
 	{
@@ -151,19 +154,13 @@ public void FF2R_OnBossCreated(int clientIdx, BossData cfg, bool setup)
 		{	
 			if(GetClientTeam(victim) == GetClientTeam(clientIdx))
 			{
-				if(ability.GetString("allyconds", buffer, sizeof(buffer)))
-				{
-					strcopy(TWEAK_AllyConditions[clientIdx], sizeof(TWEAK_AllyConditions[]), buffer);
-					AddCondition(victim, buffer);
-				}			
+				if(TWEAK_AllyConditions[clientIdx][0])
+					AddCondition(victim, TWEAK_AllyConditions[clientIdx]);
 			}
 			else
 			{
-				if(ability.GetString("enemyconds", buffer, sizeof(buffer)))
-				{
-					strcopy(TWEAK_EnemyConditions[clientIdx], sizeof(TWEAK_EnemyConditions[]), buffer);
-					AddCondition(victim, buffer);
-				}				
+				if(TWEAK_EnemyConditions[clientIdx][0])
+					AddCondition(victim, TWEAK_EnemyConditions[clientIdx]);
 			}
 		}
 	}
@@ -267,7 +264,7 @@ stock void AddCondition(int clientIdx, char[] conditions)
 	int count = ExplodeString(conditions, " ; ", conds, sizeof(conds), sizeof(conds));
 	if (count > 0)
 	{
-		for (int i = 0; i < count; i+=2)
+		for (int i = 0; i + 1 < count; i+=2) // pairs of condition ; duration
 		{
 			if(!TF2_IsPlayerInCondition(clientIdx, view_as<TFCond>(StringToInt(conds[i]))))
 			{
@@ -283,7 +280,7 @@ stock void AddOnlyUnlimitedCondition(int clientIdx, char[] conditions)
 	int count = ExplodeString(conditions, " ; ", conds, sizeof(conds), sizeof(conds));
 	if (count > 0)
 	{
-		for (int i = 0; i < count; i+=2)
+		for (int i = 0; i + 1 < count; i+=2) // pairs of condition ; duration
 		{
 			if(!TF2_IsPlayerInCondition(clientIdx, view_as<TFCond>(StringToInt(conds[i]))) && StringToFloat(conds[i+1]) < 0.0)
 			{

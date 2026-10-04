@@ -36,8 +36,16 @@ public OnClientPutInServer(client)
     SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamagePost);
 }
 
+public OnMapStart()
+{
+	Saitama = false;
+}
+
 public void Event_RoundStart(Event hEvent, const char[] strName, bool bDontBroadcast)
 {
+	// arena_win_panel never fires if the map changes mid-round; without this the next boss one-shots everyone
+	Saitama = false;
+	
 	if(!FF2_IsFF2Enabled() || FF2_GetRoundState()!=1)
 		return;
 	

@@ -177,6 +177,8 @@ int minToSpawn[MAXPLAYERS+1];
 bool minRestrict2[MAXPLAYERS+1];
 int minToSpawn2[MAXPLAYERS+1];
 Handle MinionKV[MAXPLAYERS+1];
+bool ReanimatorEventsHooked;
+bool BroadcastAudioHooked;
 int SummonerIndex[MAXPLAYERS+1];
 VoiceMode VOMode[MAXPLAYERS+1];
 MoveType mMoveType[MAXPLAYERS+1];
@@ -296,6 +298,8 @@ public void OnPluginStart2()
 
 public OnClientDisconnect(client) 
 {
+	delete MinionKV[client];
+	
 	if(revivemarkers != -1)
 	{
 		if(IsValidMarker(reviveMarker[client])) 
@@ -450,7 +454,7 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 
 stock void ResetSalmonSettings(int client)
 {
-	MinionKV[client]=null;
+	delete MinionKV[client];
 	VOMode[client]=VoiceMode_Normal;
 	SummonerIndex[client]=-1;
 	DontSlay[client]=false;
@@ -531,7 +535,7 @@ public Action CheckAbility(Handle timer) // Check for abilities
 			SDKUnhook(client, SDKHook_GetMaxHealth, GetMaxHealth_Minion);
 			HookHealth[client]=false;
 		}
-		MinionKV[client]=null;
+		delete MinionKV[client];
 		VOMode[client]=VoiceMode_Normal;
 		minionMaxHP[client]=0;
 		Salmon_AMS[client]=false;
@@ -557,8 +561,13 @@ public Action CheckAbility(Handle timer) // Check for abilities
 			{
 				decaytime=FF2_GetAbilityArgument(boss,this_plugin_name,REANIMATORS, 1); // Reanimator decay time
 				revivemarkers = FF2_GetAbilityArgument(boss,this_plugin_name,REANIMATORS, 2); // Can Minions Revive Each Other?
-				HookEvent("player_changeclass", Event_ChangeClass);
-				HookEvent("post_inventory_application", Event_PlayerInventory, EventHookMode_Pre);
+				// HookEvent does not dedupe; hooking every round made these run once per round played
+				if(!ReanimatorEventsHooked)
+				{
+					HookEvent("player_changeclass", Event_ChangeClass);
+					HookEvent("post_inventory_application", Event_PlayerInventory, EventHookMode_Pre);
+					ReanimatorEventsHooked=true;
+				}
 			}
 			if(FF2_HasAbility(boss, this_plugin_name, INTRO))
 			{
@@ -633,7 +642,11 @@ public Action CheckAbility(Handle timer) // Check for abilities
 					}
 					HasOuttro=true;
 				}
-				HookEvent("teamplay_broadcast_audio", Event_BroadcastAudio, EventHookMode_Pre);
+				if(!BroadcastAudioHooked)
+				{
+					HookEvent("teamplay_broadcast_audio", Event_BroadcastAudio, EventHookMode_Pre);
+					BroadcastAudioHooked=true;
+				}
 			}
 			if(FF2_HasAbility(boss, this_plugin_name, RANDOMMODEL))
 			{
@@ -2318,7 +2331,14 @@ public void Salmon(int boss, int client, bool spawnalert, int quantity, float ra
 				}
 				case 2: // looks like a random boss
 				{
-					MinionKV[client]=bossKV;
+					// FF2R deletes the KeyValues it hands out next frame, so the minion keeps its own copy for catchphrases
+					delete MinionKV[ii];
+					if(bossKV)
+					{
+						MinionKV[ii]=CreateKeyValues("character");
+						KvRewind(bossKV);
+						KvCopySubkeys(bossKV, MinionKV[ii]);
+					}
 					char taunt[PLATFORM_MAX_PATH];
 					TF2_SetPlayerClass(ii, TFClassType:KvGetNum(bossKV, "class", 0), _, false);
 					KvGetString(bossKV, "model", model, PLATFORM_MAX_PATH);	
@@ -2708,15 +2728,25 @@ stock bool:HasSection(const String:sound[], String:file[], length, Handle bossKV
 	return true;
 }
 
+int BossConfigCount=-1;
+
+public void OnMapStart()
+{
+	BossConfigCount=-1;
+}
+
 public Handle GetRandomBossKV(int boss)
 {
-	int index=-1;
-	for(int config=0; FF2_GetSpecialKV(config, true)!=null; config++)
+	if(BossConfigCount<0)
 	{
-		index++;
+		BossConfigCount=0;
+		while(FF2_GetSpecialKV(BossConfigCount, true)!=null)
+		{
+			BossConfigCount++;
+		}
 	}
 	
-	int position=GetRandomInt(0, index);
+	int position=GetRandomInt(0, BossConfigCount-1);
 	Handle BossKV=FF2_GetSpecialKV(position, true);
 	if(BossKV!=null) return BossKV;
 	return FF2_GetSpecialKV(boss, false);

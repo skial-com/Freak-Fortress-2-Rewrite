@@ -165,9 +165,7 @@ stock bool:DD_IsSpotSafe(clientIdx, const Float:pos[3], Float:sizeMultiplier = 1
 		{
 			Call_StartFunction(plugin, func);
 			Call_PushCell(clientIdx);
-			Call_PushFloat(pos[0]);
-			Call_PushFloat(pos[1]);
-			Call_PushFloat(pos[2]);
+			Call_PushArray(pos, 3); // IsSpotSafe takes Float:playerPos[3]
 			Call_PushFloat(sizeMultiplier);
 			Call_Finish(result);
 		}
