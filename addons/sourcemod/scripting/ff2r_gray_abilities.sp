@@ -864,7 +864,7 @@ void OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 Action OnNormalSHook(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
-	if(entity > 0 && entity <= MaxClients)
+	if(entity > 0 && entity <= MaxClients && IsClientInGame(entity))
 	{
 		int client = entity;
 		if(TF2_IsPlayerInCondition(entity, TFCond_Disguised))
