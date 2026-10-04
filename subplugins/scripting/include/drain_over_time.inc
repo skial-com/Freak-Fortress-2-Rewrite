@@ -17,7 +17,11 @@ stock Handle:FindDOTPlugin()
 		
 		GetPluginFilename(pl, buffer, sizeof(buffer));
 		//PrintToServer("plugin: %s", buffer);
-		if (StrContains(buffer, "drain_over_time.ff2", false) != -1) // hahaha, a function with a boolean sounding name which returns -1 on failure. lololololol
+		// FF2 1.x loaded subplugins as .ff2, FF2R loads them as .smx
+		if (StrContains(buffer, "drain_over_time.ff2", false) != -1 // hahaha, a function with a boolean sounding name which returns -1 on failure. lololololol
+			|| StrEqual(buffer, "drain_over_time.smx", false)
+			|| StrContains(buffer, "/drain_over_time.smx", false) != -1
+			|| StrContains(buffer, "\\drain_over_time.smx", false) != -1)
 			break;
 		else
 			pl = INVALID_HANDLE;

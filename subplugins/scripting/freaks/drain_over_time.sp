@@ -20,9 +20,9 @@
  */
 
 // change this to minimize console output
-new PRINT_DEBUG_INFO = true;
+new PRINT_DEBUG_INFO = false;
 
-#define MAX_PLAYERS_ARRAY 36
+#define MAX_PLAYERS_ARRAY (MAXPLAYERS + 1)
 #define MAX_PLAYERS (MAX_PLAYERS_ARRAY < (MaxClients + 1) ? MAX_PLAYERS_ARRAY : (MaxClients + 1))
 
 // text string limits

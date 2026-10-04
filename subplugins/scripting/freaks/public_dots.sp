@@ -39,12 +39,12 @@
 new BossTeam = _:TFTeam_Blue;
 
 // change this to minimize console output
-new PRINT_DEBUG_INFO = true;
+new PRINT_DEBUG_INFO = false;
 
 // for getting things off the map that have an undesirable destruction delay (i.e. certain particle effects)
 new Float:OFF_THE_MAP[3] = { 16383.0, 16383.0, -16383.0 };
 
-#define MAX_PLAYERS_ARRAY 33
+#define MAX_PLAYERS_ARRAY (MAXPLAYERS + 1)
 #define MAX_PLAYERS (MAX_PLAYERS_ARRAY < (MaxClients + 1) ? MAX_PLAYERS_ARRAY : (MaxClients + 1))
 
 // this is very generous as really only VSH servers with the RTD mod would have this many
@@ -799,15 +799,13 @@ public Action:RemoveEntityDA(Handle:timer, any:entid)
 	new entity=EntRefToEntIndex(entid);
 	if(IsValidEdict(entity) && entity>MAX_PLAYERS)
 	{
-			if(TF2_IsWearable(entity))
+			// the IsWearable SDKCall from the old FF2 include is gone; wearables are removed through their owner
+			decl String:classname[64];
+			GetEntityClassname(entity, classname, sizeof(classname));
+			new owner = HasEntProp(entity, Prop_Send, "m_hOwnerEntity") ? GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") : -1;
+			if(!StrContains(classname, "tf_wearable") && owner > 0 && owner <= MaxClients && IsClientInGame(owner))
 			{
-				for(new client=1; client<MaxClients; client++)
-				{
-					if(IsValidEdict(client) && IsClientInGame(client))
-					{
-						TF2_RemoveWearable(client, entity);
-					}
-				}
+				TF2_RemoveWearable(owner, entity);
 			}
 			else
 			{
