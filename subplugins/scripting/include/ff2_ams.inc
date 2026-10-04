@@ -91,7 +91,7 @@ stock bool FunctionExists(char[] pluginName, char[] functionName)
  **/
 stock bool AMS_IsSubabilityReady(int bossIdx, const char[] pluginName, const char[] abilityName)
 {
-	return FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability") && FF2_HasAbility(bossIdx, "ff2_sarysapub3", "ability_management_system") && !FF2_GetAbilityArgument(bossIdx, pluginName, abilityName, 0);
+	return FunctionExists("ff2_sarysapub3.", "AMS_InitSubability") && FF2_HasAbility(bossIdx, "ff2_sarysapub3", "ability_management_system") && !FF2_GetAbilityArgument(bossIdx, pluginName, abilityName, 0);
 }
 
 /**
@@ -108,7 +108,7 @@ stock void AMS_InitSubability(int bossIdx, int clientIdx,const char[] pluginName
 {
 	if(AMS_IsSubabilityReady(bossIdx, pluginName, abilityName))
 	{
-		Handle plugin=FindPlugin("ff2_sarysapub3.ff2");
+		Handle plugin=FindPlugin("ff2_sarysapub3.");
 		if(plugin!=null)
 		{
 			Function func=GetFunctionByName(plugin, "AMS_InitSubability");

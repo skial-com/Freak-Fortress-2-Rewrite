@@ -42,29 +42,29 @@ int g_Boss;
 int MJT_ButtonType;		// Shared between Magic Jump and Magic Teleport as 4th argument, or Jump Manager as 2nd
 
 /* Rage_Wanker */
-int WankerPissMode[MAXPLAYERS];						//1
-int WankerAmmo[MAXPLAYERS];							//2
+int WankerPissMode[MAXPLAYERS+1];						//1
+int WankerAmmo[MAXPLAYERS+1];							//2
 
-float WankerPissDuration[MAXPLAYERS]; 				//3
+float WankerPissDuration[MAXPLAYERS+1]; 				//3
 
 /* Rage_TheRock */
-float Rockduration[MAXPLAYERS];						//1
+float Rockduration[MAXPLAYERS+1];						//1
 
 /* Rage_Mine */
-int FruitCanRemoveSentry[MAXPLAYERS];				//2
-float FruitRageRange[MAXPLAYERS];					//1
+int FruitCanRemoveSentry[MAXPLAYERS+1];				//2
+float FruitRageRange[MAXPLAYERS+1];					//1
 
 /* Charge_RocketSpawn */
-int RocketRequiredRage[MAXPLAYERS];					//8
+int RocketRequiredRage[MAXPLAYERS+1];					//8
 
-float RocketCharge[MAXPLAYERS];						//1
-float RocketCooldown[MAXPLAYERS];					//2
-float RocketSpeed[MAXPLAYERS];						//3
-float RocketDamage[MAXPLAYERS];						//6
-float RocketStunTime[MAXPLAYERS];					//7
+float RocketCharge[MAXPLAYERS+1];						//1
+float RocketCooldown[MAXPLAYERS+1];					//2
+float RocketSpeed[MAXPLAYERS+1];						//3
+float RocketDamage[MAXPLAYERS+1];						//6
+float RocketStunTime[MAXPLAYERS+1];					//7
 
-char RocketModel[MAXPLAYERS][PLATFORM_MAX_PATH];	//4
-char RocketParticle[MAXPLAYERS][PLATFORM_MAX_PATH];	//5
+char RocketModel[MAXPLAYERS+1][PLATFORM_MAX_PATH];	//4
+char RocketParticle[MAXPLAYERS+1][PLATFORM_MAX_PATH];	//5
 
 Handle chargeHUD = INVALID_HANDLE;
 
@@ -78,7 +78,7 @@ Handle chargeHUD = INVALID_HANDLE;
 
 int RaptureIteration;					// 1
 int RaptureBlindTime;					// 9
-int g_Update[MAXPLAYERS];				// Internal
+int g_Update[MAXPLAYERS+1];				// Internal
 int g_Smoke;							// Internal
 int g_Glow;								// Internal
 int g_Laser;							// Internal
@@ -90,7 +90,7 @@ float RaptureDmg;						// 5
 float RaptureStunTime;					// 7
 float RaptureDuration;					// 8
 float RaptureSlayRatio;					// 10
-float DiedRapture[MAXPLAYERS];			// Internal
+float DiedRapture[MAXPLAYERS+1];			// Internal
 
 char RapturePush[6];					// 6
 
@@ -110,9 +110,10 @@ Handle heffeHUD = INVALID_HANDLE;
 /* DOT_Heffe_Jump */
 int FlapForce;							// 2
 
-float HeffeUpdateHUD[MAXPLAYERS];		// Internal
+float HeffeUpdateHUD[MAXPLAYERS+1];		// Internal
 float FlapDrain;						// 1
 float FlapRate;							// 3
+#pragma unused FlapRate // assigned but never read; kept so the arg parsing stays as-is
 
 char FlapSound[PLATFORM_MAX_PATH];		// 4
 
@@ -121,44 +122,44 @@ bool g_bButtonPressed = false;			// Internal
 Handle jumpHUD = INVALID_HANDLE;
 
 /* Special_PocketMedic */
-bool MedicJumpWeaponPreference[MAXPLAYERS];
-bool MedicTeleWeaponPreference[MAXPLAYERS];
+bool MedicJumpWeaponPreference[MAXPLAYERS+1];
+bool MedicTeleWeaponPreference[MAXPLAYERS+1];
 
 /* Rage_SkeleSummon */
-int SkeleNumberOfSpawns[MAXPLAYERS];				// 1
+int SkeleNumberOfSpawns[MAXPLAYERS+1];				// 1
 
 /* Charge_MagicJump */			// Intended for gaining height
-float MJ_ChargeTime[MAXPLAYERS];					// 1
-float MJ_Cooldown[MAXPLAYERS];						// 2
-float MJ_OnCooldownUntil[MAXPLAYERS];				// Internal, set by arg3
-float MJ_CrouchOrAltFireDownSince[MAXPLAYERS];		// Internal
+float MJ_ChargeTime[MAXPLAYERS+1];					// 1
+float MJ_Cooldown[MAXPLAYERS+1];						// 2
+float MJ_OnCooldownUntil[MAXPLAYERS+1];				// Internal, set by arg3
+float MJ_CrouchOrAltFireDownSince[MAXPLAYERS+1];		// Internal
 
 bool MJ_EmergencyReady[MAXPLAYERS+1];				// Internal
 
 /* Charge_MegicTele */			// Intended for catching fast players
-float MT_ChargeTime[MAXPLAYERS];					// 1
-float MT_Cooldown[MAXPLAYERS];						// 2
-float MT_OnCooldownUntil[MAXPLAYERS];				// Internal, set by arg3
-float MT_CrouchOrAltFireDownSince[MAXPLAYERS];		// Internal
+float MT_ChargeTime[MAXPLAYERS+1];					// 1
+float MT_Cooldown[MAXPLAYERS+1];						// 2
+float MT_OnCooldownUntil[MAXPLAYERS+1];				// Internal, set by arg3
+float MT_CrouchOrAltFireDownSince[MAXPLAYERS+1];		// Internal
 
-bool MT_EmergencyReady[MAXPLAYERS];					// Internal
+bool MT_EmergencyReady[MAXPLAYERS+1];					// Internal
 
 /* Special_JumpManager */
 int JM_ButtonType;									// 1
 
-bool JM_AbilitySwitched[MAXPLAYERS];				// Internal
+bool JM_AbilitySwitched[MAXPLAYERS+1];				// Internal
 
-float WitchDoctorUpdateHUD[MAXPLAYERS];				// Internal
+float WitchDoctorUpdateHUD[MAXPLAYERS+1];				// Internal
 
 Handle witchdoctorHUD;
 
 /* Special_SpellAttack */
-float SS_CoolDown[MAXPLAYERS];						// 1
+float SS_CoolDown[MAXPLAYERS+1];						// 1
 
 /* Rage_MLG */
-float MLGRageTime[MAXPLAYERS];
+float MLGRageTime[MAXPLAYERS+1];
 
-bool MLG[MAXPLAYERS] = false;
+bool MLG[MAXPLAYERS+1];
 
 //////////// FF2 inits
 public void OnPluginStart2()
@@ -217,8 +218,13 @@ public void Event_RoundStart(Event hEvent, const char[] strName, bool bDontBroad
 	BossTeam = FF2_GetBossTeam();
 	MercTeam = (FF2_GetBossTeam()==view_as<int>(TFTeam_Blue)) ? view_as<int>(TFTeam_Red) : view_as<int>(TFTeam_Blue);
 	
-	for(int iIndex, iBoss=GetClientOfUserId(FF2_GetBossUserId(iIndex)); iIndex < MaxClients; iIndex++)
+	for(int iIndex; iIndex < MaxClients; iIndex++)
 	{
+		// was computed once in the for-init, so every boss index wrote into boss 0's client slot
+		int iBoss = GetClientOfUserId(FF2_GetBossUserId(iIndex));
+		if(iBoss <= 0)
+			continue;
+
 		if(FF2_HasAbility(iIndex, this_plugin_name, "rage_wanker"))
 		{
 			WankerPissMode[iBoss] = FF2_GetAbilityArgumentBool(iIndex, this_plugin_name, "rage_wanker", 1);					// Jarate and bleed or just bleed, 0 = just bleed
@@ -495,6 +501,7 @@ public Action Event_Jarate(UserMsg msg_id, BfRead msg, const int[] players, int 
 			TF2_MakeBleed(iVictim, iClient, WankerPissDuration[iClient]);
 		}
 	}
+	return Plugin_Continue;
 }
 
 public Action OnTakeRocketDamage(int iClient, int &iAttacker, int &iInflictor, float &flDamage, int &iDmgType, int &iWeapon, float vDmgForce[3], float vDmgPos[3], int iDmgCstm)
@@ -738,7 +745,7 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float vV
 					EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 					EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 
-					for (int enemy = 1; enemy < MaxClients; enemy++)
+					for (int enemy = 1; enemy <= MaxClients; enemy++)
 					{
 						if (IsClientInGame(enemy) && enemy != iClient)
 						{
@@ -1020,11 +1027,13 @@ void Charge_RocketSpawn(int iBoss, int iSlot, int iAction)	// Shamelessly stolen
 public Action Timer_ResetMoveType(Handle hTimer, any iClient) {
 	if (IsValidClient(iClient) && (GetEntityMoveType(iClient)==MOVETYPE_FLY || GetEntityMoveType(iClient)==MOVETYPE_NONE))
 		SetEntityMoveType(iClient, MOVETYPE_WALK);
+	return Plugin_Continue;
 }
 
 public Action Timer_NoPiss(Handle hTimer, any iClient) {
 	if (IsValidClient(iClient)) 
 		TF2_RemoveCondition(iClient, TFCond_Jarated);
+	return Plugin_Continue;
 }
 
 public Action RemoveEnt(Handle hTimer, any entid)
@@ -1035,6 +1044,7 @@ public Action RemoveEnt(Handle hTimer, any entid)
 		if (iEntity > MaxClients)
 			AcceptEntityInput(iEntity, "Kill");
 	}
+	return Plugin_Continue;
 }
 
 /*public Action Timer_SwitchToSlot(Handle hTimer, any iClient)
@@ -1050,6 +1060,7 @@ public Action UnHook(Handle hTimer, any Boss)
 		SDKUnhook(Boss, SDKHook_StartTouch, OnRockTouch);
 		SetEntProp(Boss, Prop_Send, "m_CollisionGroup", 5);
 	}
+	return Plugin_Continue;
 }
 
 public Action Timer_StartCD(Handle hTimer, Handle hData)
@@ -1058,6 +1069,7 @@ public Action Timer_StartCD(Handle hTimer, Handle hData)
 	int iSlot = ReadPackCell(hData);
 	float flSee = ReadPackFloat(hData);
 	FF2_SetBossCharge(iClient, iSlot, flSee);
+	return Plugin_Continue;
 }
 
 public Action Timer_HeffeTick(Handle hTimer, any iClient)
@@ -1133,6 +1145,7 @@ public Action Timer_Abduction(Handle hTimer, Handle pack)
 			hData.WriteCell(iIterations);
 		}
 	}
+	return Plugin_Continue;
 }
 
 public Action Timer_RemovePod(Handle hTimer, any ref)
@@ -1144,6 +1157,7 @@ public Action Timer_RemovePod(Handle hTimer, any ref)
 		
 		CreateTimer(0.1, RemoveEnt, ref, TIMER_FLAG_NO_MAPCHANGE);
 	}
+	return Plugin_Continue;
 }
 
 public Action Timer_RemoveRagdoll(Handle hTimer, any userid)
@@ -1157,6 +1171,7 @@ public Action Timer_RemoveRagdoll(Handle hTimer, any userid)
 			AcceptEntityInput(iRagdoll, "Kill");
 		}
 	}
+	return Plugin_Continue;
 }
 
 public Action Timer_DissolveRagdoll(Handle hTimer, Handle pack)
@@ -1171,6 +1186,7 @@ public Action Timer_DissolveRagdoll(Handle hTimer, Handle pack)
 			Dissolve(iRagdoll, ReadPackCell(pack));
 		}
 	}
+	return Plugin_Continue;
 }
 
 
@@ -1213,7 +1229,7 @@ public void Heffe_HUD(int iClient)
 		SDKUnhook(iClient, SDKHook_PreThink, Heffe_HUD);
 }
 
-public Action OnRockTouch(int Boss, int iEntity)
+public void OnRockTouch(int Boss, int iEntity)
 {
 	if(GetClientTeam(Boss) != BossTeam)
 	{
@@ -1311,7 +1327,7 @@ public void MJ_Tick(int iClient, int iButtons, float flTime)
 					EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 					EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 
-					for (new enemy = 1; enemy < MaxClients; enemy++)
+					for (new enemy = 1; enemy <= MaxClients; enemy++)
 					{
 						if (IsClientInGame(enemy) && enemy != iClient)
 						{
@@ -1335,12 +1351,12 @@ public void MJ_Tick(int iClient, int iButtons, float flTime)
 			if (MJ_EmergencyReady[iClient])
 			{
 				SetHudTextParams(-1.0, 0.88, 0.21, 225, 64, 64, 192);
-				ShowSyncHudText(iClient, witchdoctorHUD, "Super DUPER Jump ready! Press and release %s!", GetMJTButton());
+				ShowSyncHudText(iClient, witchdoctorHUD, "Super DUPER Jump ready! Press and release %s!", MJTButtonNames[ButtonNameIndex(MJT_ButtonType)]);
 			}
 			else if (MJ_OnCooldownUntil[iClient] == -1.0)
 			{
 				SetHudTextParams(-1.0, 0.88, 0.21, 255, 255, 255, 192);
-				ShowSyncHudText(iClient, witchdoctorHUD, "Magic Jump is ready. %.0f percent charged.\nPress and release %s!", flCharge, GetMJTButton());
+				ShowSyncHudText(iClient, witchdoctorHUD, "Magic Jump is ready. %.0f percent charged.\nPress and release %s!", flCharge, MJTButtonNames[ButtonNameIndex(MJT_ButtonType)]);
 			}
 			else
 			{
@@ -1416,7 +1432,7 @@ public void MT_Tick(int iClient, int iButtons, float flTime)
 					EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 					EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 
-					for (int enemy = 1; enemy < MaxClients; enemy++)
+					for (int enemy = 1; enemy <= MaxClients; enemy++)
 					{
 						if (IsClientInGame(enemy) && enemy != iClient)
 						{
@@ -1440,12 +1456,12 @@ public void MT_Tick(int iClient, int iButtons, float flTime)
 			if (MT_EmergencyReady[iClient])
 			{
 				SetHudTextParams(-1.0, 0.88, 0.21, 225, 64, 64, 192);
-				ShowSyncHudText(iClient, witchdoctorHUD, "EMERGENCY TELEPORT! Press and release %s!", GetMJTButton());
+				ShowSyncHudText(iClient, witchdoctorHUD, "EMERGENCY TELEPORT! Press and release %s!", MJTButtonNames[ButtonNameIndex(MJT_ButtonType)]);
 			}
 			else if (MT_OnCooldownUntil[iClient] == -1.0)
 			{
 				SetHudTextParams(-1.0, 0.88, 0.21, 255, 255, 255, 192);
-				ShowSyncHudText(iClient, witchdoctorHUD, "Magic Tele is ready. %.0f percent charged.\nPress and release %s!", flCharge, GetMJTButton());
+				ShowSyncHudText(iClient, witchdoctorHUD, "Magic Tele is ready. %.0f percent charged.\nPress and release %s!", flCharge, MJTButtonNames[ButtonNameIndex(MJT_ButtonType)]);
 			}
 			else
 			{
@@ -1529,7 +1545,7 @@ public void JM_Tick(int iClient, int iButtons, float flTime)
 						EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 						EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 	
-						for (new enemy = 1; enemy < MaxClients; enemy++)
+						for (new enemy = 1; enemy <= MaxClients; enemy++)
 						{
 							if (IsClientInGame(enemy) && enemy != iClient)
 							{
@@ -1553,17 +1569,17 @@ public void JM_Tick(int iClient, int iButtons, float flTime)
 				if (MJ_EmergencyReady[iClient])
 				{
 					SetHudTextParams(-1.0, 0.88, 0.21, 225, 64, 64, 192);
-					ShowSyncHudText(iClient, witchdoctorHUD, "Super DUPER Jump ready! Press and release %s!", GetMJTButton());
+					ShowSyncHudText(iClient, witchdoctorHUD, "Super DUPER Jump ready! Press and release %s!", MJTButtonNames[ButtonNameIndex(MJT_ButtonType)]);
 				}
 				else if (MJ_OnCooldownUntil[iClient] == 1000000.0)
 				{
 					SetHudTextParams(-1.0, 0.88, 0.21, 255, 255, 255, 192);
-					ShowSyncHudText(iClient, witchdoctorHUD, "Magic Jump is ready. %.0f percent charged.\nPress and release %s!\nPress %s to change.", flCharge, GetMJTButton(), GetJMButton());
+					ShowSyncHudText(iClient, witchdoctorHUD, "Magic Jump is ready. %.0f percent charged.\nPress and release %s!\nPress %s to change.", flCharge, MJTButtonNames[ButtonNameIndex(MJT_ButtonType)], JMButtonNames[ButtonNameIndex(JM_ButtonType)]);
 				}
 				else
 				{
 					SetHudTextParams(-1.0, 0.88, 0.21, 225, 64, 64, 192);
-					ShowSyncHudText(iClient, witchdoctorHUD, "Magic Jump is not ready. %.1f seconds remaining.\nPress %s to change.", MJ_OnCooldownUntil[iClient] - flTime, GetJMButton());
+					ShowSyncHudText(iClient, witchdoctorHUD, "Magic Jump is not ready. %.1f seconds remaining.\nPress %s to change.", MJ_OnCooldownUntil[iClient] - flTime, JMButtonNames[ButtonNameIndex(JM_ButtonType)]);
 				}
 			}
 		
@@ -1630,7 +1646,7 @@ public void JM_Tick(int iClient, int iButtons, float flTime)
 						EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 						EmitSoundToAll(sound, iClient, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, iClient, position, NULL_VECTOR, true, 0.0);
 
-						for (int enemy = 1; enemy < MaxClients; enemy++)
+						for (int enemy = 1; enemy <= MaxClients; enemy++)
 						{
 							if (IsClientInGame(enemy) && enemy != iClient)
 							{
@@ -1654,17 +1670,17 @@ public void JM_Tick(int iClient, int iButtons, float flTime)
 				if (MT_EmergencyReady[iClient])
 				{
 					SetHudTextParams(-1.0, 0.88, 0.21, 225, 64, 64, 192);
-					ShowSyncHudText(iClient, witchdoctorHUD, "EMERGENCY TELEPORT! Press and release %s!", GetMJTButton());
+					ShowSyncHudText(iClient, witchdoctorHUD, "EMERGENCY TELEPORT! Press and release %s!", MJTButtonNames[ButtonNameIndex(MJT_ButtonType)]);
 				}
 				else if (MT_OnCooldownUntil[iClient] == -1.0)
 				{
 					SetHudTextParams(-1.0, 0.88, 0.21, 255, 255, 255, 192);
-					ShowSyncHudText(iClient, witchdoctorHUD, "Magic Tele is ready. %.0f percent charged.\nPress and release %s!\nPress %s to change.", flCharge, GetMJTButton(), GetJMButton());
+					ShowSyncHudText(iClient, witchdoctorHUD, "Magic Tele is ready. %.0f percent charged.\nPress and release %s!\nPress %s to change.", flCharge, MJTButtonNames[ButtonNameIndex(MJT_ButtonType)], JMButtonNames[ButtonNameIndex(JM_ButtonType)]);
 				}
 				else
 				{
 					SetHudTextParams(-1.0, 0.88, 0.21, 225, 64, 64, 192);
-					ShowSyncHudText(iClient, witchdoctorHUD, "Magic Tele is not ready. %.1f seconds remaining.\nPress %s to change.", MT_OnCooldownUntil[iClient] - flTime, GetJMButton());
+					ShowSyncHudText(iClient, witchdoctorHUD, "Magic Tele is not ready. %.1f seconds remaining.\nPress %s to change.", MT_OnCooldownUntil[iClient] - flTime, JMButtonNames[ButtonNameIndex(JM_ButtonType)]);
 				}
 			}
 		
@@ -1928,7 +1944,7 @@ void PerformSmite(int iClient, int iTarget)
 {
 	float flStart[3], flEnd[3], flCeil[3];
 	GetClientAbsOrigin(iTarget, flEnd);
-	flCeil = GetMapCeiling(flCeil);
+	GetMapCeiling(flCeil);
 	flEnd[2] -= 26; // increase y-axis by 26 to strike at player's chest instead of the ground
 	
 	// define where the lightning strike starts
@@ -1963,7 +1979,7 @@ void PerformSmite(int iClient, int iTarget)
 public void ProjectBeams(float flStart[3], float flDuration, const Color[4])
 {
 	float flEnd[3], flCeil[3];
-	flCeil = GetMapCeiling(flCeil);
+	GetMapCeiling(flCeil);
 	
 	flEnd[0] = flStart[0];
 	flEnd[1] = flStart[1];
@@ -1978,7 +1994,7 @@ public void ProjectBeams(float flStart[3], float flDuration, const Color[4])
 	TE_SendToAll();
 }
 
-float GetMapCeiling(float flPos[3])
+void GetMapCeiling(float flPos[3])
 {
 	Handle hTrace = TR_TraceRayEx(flPos, view_as<float>({-90.0, 0.0, 0.0}), MASK_SHOT, RayType_Infinite);
 	
@@ -1987,8 +2003,6 @@ float GetMapCeiling(float flPos[3])
 	else 
 		flPos[2] = 1500.0;
 	delete hTrace;
-	
-	return flPos;
 }
 
 stock int AttachParticle(int iEntity, char[] sParticleType, float flOffset = 0.0, bool bAttach = true)
@@ -2139,7 +2153,7 @@ void Dissolve(int iEnt, int iMode=3)
 	}
 }
 
-int ShootProjectile(int iClient, char strEntname[48] = "")
+int ShootProjectile(int iClient, const char[] strEntname)
 {
 	float flAng[3]; // original
 	float flPos[3]; // original
@@ -2189,28 +2203,13 @@ stock float fmin(float n1, float n2)
 	return n1 < n2 ? n1 : n2;
 }
 
-stock char GetJMButton()
-{
-	char strBuffer[18];
-	switch(JM_ButtonType)
-	{
-		case 1: strBuffer = "Reload";
-		case 2: strBuffer = "Special Attack";
-		case 3: strBuffer = "Secondary Attack";
-	}
-	return strBuffer;
-}
+// SP2 can't return strings; index these with ButtonNameIndex()
+char JMButtonNames[][] = {"", "Reload", "Special Attack", "Secondary Attack"};
+char MJTButtonNames[][] = {"", "Secondary Attack", "Reload", "Special Attack"};
 
-stock char GetMJTButton()
+stock int ButtonNameIndex(int type)
 {
-	char strBuffer[18];
-	switch(MJT_ButtonType)
-	{
-		case 1: strBuffer = "Secondary Attack";
-		case 2: strBuffer = "Reload";
-		case 3: strBuffer = "Special Attack";
-	}
-	return strBuffer;
+	return (type >= 1 && type <= 3) ? type : 0;
 }
 
 stock int FindSpellBook(int iClient)
@@ -2228,7 +2227,7 @@ stock int FindSpellBook(int iClient)
 
 public bool TraceEntityFilterPlayer(int iEntity, int contentsMask)
 {
-	return (iEntity > GetMaxClients() || !iEntity);
+	return (iEntity > MaxClients || !iEntity);
 }
 
 stock bool CylinderCollision(float cylinderOrigin[3], float colliderOrigin[3], float maxDistance, float zMin, float zMax)
@@ -2260,7 +2259,7 @@ stock int GetClosestClient(int iClient)
 
 	int iClosestEntity = -1;
 	float fClosestDistance = -1.0;
-	for(int i = 1; i < MaxClients; i++) if(IsValidClient(i))
+	for(int i = 1; i <= MaxClients; i++) if(IsValidClient(i))
 	{
 		if(GetClientTeam(i) != GetClientTeam(iClient) && IsPlayerAlive(i) && i != iClient)
 		{

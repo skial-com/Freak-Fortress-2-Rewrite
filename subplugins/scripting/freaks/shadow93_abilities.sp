@@ -176,12 +176,12 @@ bool minRestrict[MAXPLAYERS+1];
 int minToSpawn[MAXPLAYERS+1];
 bool minRestrict2[MAXPLAYERS+1];
 int minToSpawn2[MAXPLAYERS+1];
-Handle MinionKV[MAXPLAYERS+1]=null;
+Handle MinionKV[MAXPLAYERS+1];
 int SummonerIndex[MAXPLAYERS+1];
 VoiceMode VOMode[MAXPLAYERS+1];
 MoveType mMoveType[MAXPLAYERS+1];
 int minionMaxHP[MAXPLAYERS+1];
-bool HookHealth[MAXPLAYERS+1]=false;
+bool HookHealth[MAXPLAYERS+1];
 
 // Reanimators
 int decaytime;
@@ -641,6 +641,7 @@ public Action CheckAbility(Handle timer) // Check for abilities
 			}
 		}
 	}
+	return Plugin_Continue;
 }
 
 public Action Timer_RandomModel(Handle timer, any client)
@@ -743,7 +744,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	{
 		if(Vaccinator_AMS[client])
 		{
-			if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability"))
+			if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability"))
 			{
 				Vaccinator_AMS[client]=false;
 			}
@@ -763,7 +764,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 		}
 		if(Salmon_AMS[client])
 		{
-			if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability"))
+			if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability"))
 			{
 				Salmon_AMS[client]=false;
 			}
@@ -778,7 +779,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	{
 		if(Thriller_AMS[client])
 		{
-			if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability"))
+			if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability"))
 			{
 				Thriller_AMS[client]=false;
 			}
@@ -793,7 +794,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	{
 		if(Buildable_AMS[client])
 		{
-			if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability"))
+			if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability"))
 			{
 				Buildable_AMS[client]=false;
 			}
@@ -2018,13 +2019,23 @@ stock RemoveReanimator(client) // Removes a revive marker
 public Action:MoveMarker(Handle:timer, any:userid)
 {
 	new client = GetClientOfUserId(userid);
+	if(!client || !IsValidMarker(reviveMarker[client]))
+		return Plugin_Continue;
 	new Float:position[3];
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", position);
 	TeleportEntity(reviveMarker[client], position, NULL_VECTOR, NULL_VECTOR);
+	return Plugin_Continue;
 }
 
 public Action:TimeBeforeRemoval(Handle:timer, any:userid) 
 {
+	// this timer is finishing; forget its handle so RemoveReanimator never kills a stale one
+	for(new i=1; i<=MaxClients; i++)
+	{
+		if(decayTimers[i] == timer)
+			decayTimers[i] = null;
+	}
+
 	new client = GetClientOfUserId(userid);
 	if(!IsValidMarker(reviveMarker[client]) || !IsValidClient(client)) 
 		return Plugin_Handled;
@@ -2034,11 +2045,6 @@ public Action:TimeBeforeRemoval(Handle:timer, any:userid)
 		ChangeClientTeam(client, (FF2_GetBossTeam()==_:TFTeam_Blue) ? (_:TFTeam_Red) : (_:TFTeam_Blue));
 	}
 	RemoveReanimator(client);
-	if(decayTimers[client] != null)
-	{
-		KillTimer(decayTimers[client]);
-		decayTimers[client] = null;
-	}
 	return Plugin_Continue;
 }
 
@@ -2090,7 +2096,7 @@ stock int GetAlivePlayerCount(TFTeam team)
 	return alivePlayers;
 }
 
-stock int SetWeaponClip(int client, int slot, int clip)
+stock void SetWeaponClip(int client, int slot, int clip)
 {
 	int weapon = GetPlayerWeaponSlot(client, slot);
 	if (IsValidEntity(weapon))
@@ -2099,7 +2105,7 @@ stock int SetWeaponClip(int client, int slot, int clip)
 	}
 }
 
-stock int SetWeaponAmmo(int client, int slot, int ammo)
+stock void SetWeaponAmmo(int client, int slot, int ammo)
 {
 	int weapon = GetPlayerWeaponSlot(client, slot);
 	if (IsValidEntity(weapon))

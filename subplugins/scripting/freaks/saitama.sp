@@ -5,7 +5,7 @@
 #include <sdkhooks>
 #include <tf2_stocks>
 #include <tf2items>
-#include <tf2attributes>
+// <tf2attributes> was included but unused; it made the tf2attributes plugin a hard dependency
 #include <freak_fortress_2>
 #include <freak_fortress_2_subplugin>
 

@@ -520,7 +520,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	new slot=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 0);
 	if(!strcmp(ability_name,BUFFS))	// Defenses
 	{
-		if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability")) // Fail state?
+		if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability")) // Fail state?
 		{
 			Buffs_TriggerAMS[client]=false;
 		}
@@ -530,7 +530,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	}
 	else if (!strcmp(ability_name,OUTLINE))
 	{
-		if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability")) // Fail state?
+		if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability")) // Fail state?
 		{
 			Outline_TriggerAMS[client]=false;
 		}
@@ -540,7 +540,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	}
 	else if (!strcmp(ability_name,FIRE))
 	{
-		if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability")) // Fail state?
+		if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability")) // Fail state?
 		{
 			Fire_TriggerAMS[client]=false;
 		}
@@ -550,7 +550,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	}
 	else if (!strcmp(ability_name,SLAY))
 	{
-		if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability")) // Fail state?
+		if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability")) // Fail state?
 		{
 			Slay_TriggerAMS[client]=false;
 		}
@@ -601,7 +601,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	}
 	else if(!strcmp(ability_name,REVIVE_BOSSES))	// Defenses
 	{
-		if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability")) // Fail state?
+		if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability")) // Fail state?
 		{
 			ReviveBosses_TriggerAMS[client]=false;
 		}
@@ -611,7 +611,7 @@ public Action:FF2_OnAbility2(boss,const String:plugin_name[],const String:abilit
 	}
 	else if(!strcmp(ability_name,HEAL_BOSSES))	// Defenses
 	{
-		if(!FunctionExists("ff2_sarysapub3.ff2", "AMS_InitSubability")) // Fail state?
+		if(!FunctionExists("ff2_sarysapub3.", "AMS_InitSubability")) // Fail state?
 		{
 			HealBosses_TriggerAMS[client]=false;
 		}

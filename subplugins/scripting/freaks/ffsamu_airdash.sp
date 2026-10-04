@@ -103,6 +103,7 @@ public Plugin:myinfo = {
 public Action:FF2_OnAbility2(index, const String:plugin_name[], const String:ability_name[], status)
 {
 	// The FitnessGram™ Pacer Test is a multistage aerobic capacity test that progressively gets more difficult as it continues. The 20 meter pacer test will begin in 30 seconds. Line up at the start. The running speed starts slowly, but gets faster each minute after you hear this signal. [beep] A single lap should be completed each time you hear this sound. [ding] Remember to run in a straight line, and run as long as possible. The second time you fail to complete a lap before the sound, your test is over. The test will begin on the word start. On your mark, get ready, start.
+	return Plugin_Continue;
 }
 
 public OnPluginStart2()
@@ -118,6 +119,11 @@ public Action OnRoundStart(Handle event, const String:name[], bool dontBroadcast
 	// PrintToChatAll("Airdash init");
 	for(new client = 1; client <=MaxClients; client++)
 	{
+		// timers from the previous round would otherwise keep running and stack with new ones
+		if(g_hRechargeHandle[client] != INVALID_HANDLE)
+			KillTimer(g_hRechargeHandle[client]);
+		if(g_hDashReadyHandle[client] != INVALID_HANDLE)
+			KillTimer(g_hDashReadyHandle[client]);
 		g_hRechargeHandle[client] = INVALID_HANDLE;
 		g_hDashReadyHandle[client] = INVALID_HANDLE;
 		g_GlideState[client] = 0;
@@ -181,6 +187,17 @@ public Action OnRoundStart(Handle event, const String:name[], bool dontBroadcast
 			}
 		}
 	}
+	return Plugin_Continue;
+}
+
+// map change kills TIMER_FLAG_NO_MAPCHANGE timers; forget their handles
+public OnMapStart()
+{
+	for(new client = 1; client <= MaxClients; client++)
+	{
+		g_hRechargeHandle[client] = INVALID_HANDLE;
+		g_hDashReadyHandle[client] = INVALID_HANDLE;
+	}
 }
 
 public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
@@ -189,6 +206,7 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		g_bClientDash[client] = false;
 	}
+	return Plugin_Continue;
 }
 
 public Action:t_EnableDash(Handle:timer, int client)
@@ -207,7 +225,7 @@ public Action:t_AddCharge(Handle:timer, int client)
 	if(g_Charges[client] == g_MaxCharges[client])
 		g_hRechargeHandle[client] = INVALID_HANDLE;
 	else
-		g_hRechargeHandle[client] = CreateTimer(g_fRechargeTimer[client], t_AddCharge, client);
+		g_hRechargeHandle[client] = CreateTimer(g_fRechargeTimer[client], t_AddCharge, client, TIMER_FLAG_NO_MAPCHANGE);
 		
 	 // center message bc still no hud cooldown
 	 // however you can edit what it says through args, yay
@@ -218,6 +236,7 @@ public Action:t_AddCharge(Handle:timer, int client)
 
 public Action:t_DashCooldown(Handle:timer, int client)
 {
+	g_hDashReadyHandle[client] = INVALID_HANDLE;
 	g_bDashReady[client] = true;
 	
 	return Plugin_Continue;
@@ -277,7 +296,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				g_GlideState[client] = 0;
 				g_GlideTime[client] = 0;
 			}
-		    static float delay[36];
+		    static float delay[MAXPLAYERARRAY];
 			if(g_bClientDash[client] && delay[client]<GetGameTime())
 			{
 				delay[client] = GetGameTime()+0.25; 
@@ -321,7 +340,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 					
 					if(g_fRageCost[client] > 0.0)
 					{
-						FF2_SetBossCharge(client, 0, rage-g_fRageCost[client]);
+						FF2_SetBossCharge(boss, 0, rage-g_fRageCost[client]);
 					}
 					
 					g_Charges[client]--;
@@ -332,11 +351,13 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 						g_TimeSinceDash[client] = 0;
 					}
 
-					g_hDashReadyHandle[client] == CreateTimer(g_fDashCooldown[client], t_DashCooldown, client);
+					if(g_hDashReadyHandle[client] != INVALID_HANDLE)
+						KillTimer(g_hDashReadyHandle[client]);
+					g_hDashReadyHandle[client] = CreateTimer(g_fDashCooldown[client], t_DashCooldown, client, TIMER_FLAG_NO_MAPCHANGE);
 					
 					g_bDashReady[client] = false;
 					if(g_hRechargeHandle[client] == INVALID_HANDLE)
-						g_hRechargeHandle[client] = CreateTimer(g_fRechargeTimer[client], t_AddCharge, client);
+						g_hRechargeHandle[client] = CreateTimer(g_fRechargeTimer[client], t_AddCharge, client, TIMER_FLAG_NO_MAPCHANGE);
 						
 					decl Float:position[3];
 					GetEntPropVector(client, Prop_Send, "m_vecOrigin", position);
@@ -366,6 +387,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 			}
 		}
 	}
+	return Plugin_Continue;
 }
 
 stock bool IsValidClient(client)

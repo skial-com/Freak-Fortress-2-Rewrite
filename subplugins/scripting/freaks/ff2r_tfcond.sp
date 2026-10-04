@@ -50,7 +50,7 @@
 
 #define PLUGIN_URL ""
 
-#define MAXTF2PLAYERS	36
+#define MAXTF2PLAYERS	(MAXPLAYERS + 1)
 
 char TWEAK_AllyConditions[MAXTF2PLAYERS][512];
 char TWEAK_EnemyConditions[MAXTF2PLAYERS][512];
@@ -91,7 +91,7 @@ public void Event_OnPlayerDeath(Event event, const char[] name, bool dontBroadca
 
 public void Event_PlayerInventoryApplication(Event event, const char[] name, bool dontBroadcast)
 {
-	int victim = GetEventInt(event, "userid");
+	int victim = GetClientOfUserId(event.GetInt("userid"));
 	if(IsValidClient(victim))
 	{
 		for(int clientIdx = 1; clientIdx <= MaxClients; clientIdx++)
@@ -104,8 +104,8 @@ public void Event_PlayerInventoryApplication(Event event, const char[] name, boo
 					AbilityData ability = cfg.GetAbility("tweak_tfcondition");
 					if(ability.IsMyPlugin())	// Incase of duplicated ability names
 					{
-						if(!ability.GetBool("enabled"))
-							return;
+						if(!ability.GetBool("enabled", true))
+							continue;
 							
 						if(GetClientTeam(victim) == GetClientTeam(clientIdx))
 						{
@@ -171,6 +171,9 @@ public void FF2R_OnBossCreated(int clientIdx, BossData cfg, bool setup)
 
 public void FF2R_OnBossRemoved(int clientIdx)
 {
+	if(!IsClientInGame(clientIdx))	// can be called after the boss disconnected; GetClientTeam below would throw
+		return;
+	
 	BossData cfg = FF2R_GetBossData(clientIdx);	
 	AbilityData ability = cfg.GetAbility("tweak_tfcondition");
 	if(!ability.IsMyPlugin())	// Incase of duplicated ability names
@@ -191,7 +194,7 @@ public void FF2R_OnBossRemoved(int clientIdx)
 			{
 				if(ability.GetBool("remove enemyconds on boss death"))
 				{
-					RemoveCondition(victim, TWEAK_AllyConditions[clientIdx]);
+					RemoveCondition(victim, TWEAK_EnemyConditions[clientIdx]);
 				}
 			}
 		}
@@ -229,6 +232,7 @@ public void Rage_TFCond(int clientIdx, const char[] ability_name, AbilityData ab
 		if(IsValidClient(victim) && IsPlayerAlive(victim) && victim != clientIdx)
 		{
 			GetClientEyePosition(victim, pos2);
+			// squared distance: "allyrange"/"enemyrange" are compared as squared units, and the boss configs are tuned for that
 			float distance = GetVectorDistance(pos1, pos2, true);
 			
 			if(GetClientTeam(victim) == GetClientTeam(clientIdx))

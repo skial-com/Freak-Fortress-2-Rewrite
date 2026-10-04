@@ -381,7 +381,7 @@ public event_round_active(Handle:event, const String:name[], bool:dontBroadcast)
                 KvGetString(kv, "attributes", gs_bossweaponattribs, 256, "2.0;3;68;2");
                 g_bossweaponindex = KvGetNum(kv, "index", 132);
             }
-            CloseHandle(kv);
+            // kv is owned by FF2R, which deletes it next frame
         }
     }
     else if(FF2_HasAbility( 0, this_plugin_name, "special_hidden" ))
@@ -522,7 +522,7 @@ public Action:event_player_death(Handle:hEvent, const String:strEventName[], boo
                 }
             }
             
-            if(client > 0 && client <= client && IsClientInGame(client))
+            if(client > 0 && client <= MaxClients && IsClientInGame(client))
             {
                 if(GetClientOfUserId(GetEventInt(hEvent,"attacker")) == g_boss)			// spawn trophy skulls for all nonboss
                 {
@@ -534,7 +534,7 @@ public Action:event_player_death(Handle:hEvent, const String:strEventName[], boo
                     if(GetEngineTime() - gf_diedPredCannon[client] <= 0.1)
                     {			
                         new iDamageBits = GetEventInt(hEvent, "damagebits");
-                        SetEventInt(hEvent, "damagebits",  iDamageBits |= DMG_CRIT);
+                        SetEventInt(hEvent, "damagebits",  iDamageBits | DMG_CRIT);
                         SetEventString(hEvent, "weapon_logclassname", "predator_cannon");
                         SetEventString(hEvent, "weapon", "obj_sentrygun");
                         SetEventInt(hEvent, "customkill", TF_CUSTOM_PLAYER_SENTRY);
@@ -554,10 +554,10 @@ public Action:event_player_death(Handle:hEvent, const String:strEventName[], boo
         if(attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker) && GetClientTeam(attacker) == g_BossTeam)
         {
             new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
-            if(client > 0 && client <= client && IsClientInGame(client) && GetClientTeam(client) != g_BossTeam)
+            if(client > 0 && client <= MaxClients && IsClientInGame(client) && GetClientTeam(client) != g_BossTeam)
             {
                 SetDoomUI(attacker, EMOTION_HAPPY);									// death is good
-                if(GetEntityFlags(client) && FL_ONGROUND && !GetRandomInt(0, g_doomRandomChance))
+                if((GetEntityFlags(client) & FL_ONGROUND) && !GetRandomInt(0, g_doomRandomChance))
                 {
                     SpawnItem(client);
                 }
@@ -574,14 +574,14 @@ public Action:event_player_death(Handle:hEvent, const String:strEventName[], boo
         }
         else
         {
-            if(client > 0 && client <= client && IsClientInGame(client))
+            if(client > 0 && client <= MaxClients && IsClientInGame(client))
             {
                 if(gf_diedFireball[client] != 0.0)									// set kill icon to hadouken
                 {
                     if(GetEngineTime() - gf_diedFireball[client] <= 0.1)
                     {			
                         new iDamageBits = GetEventInt(hEvent, "damagebits");
-                        SetEventInt(hEvent, "damagebits",  iDamageBits |= DMG_CRIT);
+                        SetEventInt(hEvent, "damagebits",  iDamageBits | DMG_CRIT);
                         SetEventString(hEvent, "weapon_logclassname", "rage_fireball");
                         SetEventString(hEvent, "weapon", "taunt_pyro");
                         SetEventInt(hEvent, "customkill", TF_CUSTOM_TAUNT_HADOUKEN);
@@ -608,7 +608,7 @@ public Action:event_player_death(Handle:hEvent, const String:strEventName[], boo
             if(client && IsClientInGame(client) && EntRefToEntIndex(g_chainsawref) == GetEventInt(hEvent, "inflictor_entindex"))
             {		
                 new iDamageBits = GetEventInt(hEvent, "damagebits");
-                SetEventInt(hEvent, "damagebits",  iDamageBits |= DMG_NERVEGAS);
+                SetEventInt(hEvent, "damagebits",  iDamageBits | DMG_NERVEGAS);
                 SetEventString(hEvent, "weapon_logclassname", "ash_chainsaw");
                 SetEventString(hEvent, "weapon", "worldspawn");				// something environmental ??!! 
                 SetEventInt(hEvent, "customkill", TF_CUSTOM_TRIGGER_HURT);

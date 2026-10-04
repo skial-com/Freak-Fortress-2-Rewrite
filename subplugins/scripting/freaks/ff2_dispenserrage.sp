@@ -45,8 +45,12 @@ public OnPluginStart2()
 
 public Action:Healdisp(Handle timer, disp) // If normal sentry, she has a animation and reset her health, because animation set to normal sentry heal
 {
-	SetVariantInt(heal);
-	AcceptEntityInput(disp, "SetHealth");
+	disp = EntRefToEntIndex(disp);
+	if (IsValidEntity(disp))
+	{
+		SetVariantInt(heal);
+		AcceptEntityInput(disp, "SetHealth");
+	}
 
 }
 
@@ -65,6 +69,7 @@ public Action:FF2_OnAbility2(index,const String:plugin_name[],const String:abili
 
 public Action:Destroydisp(Handle timer, disp)
 {
+	disp = EntRefToEntIndex(disp);
 	if (IsValidEntity(disp) == true)
 	{
 		AcceptEntityInput(disp, "Kill");
@@ -74,6 +79,7 @@ public Action:Destroydisp(Handle timer, disp)
 
 public Action:Setupbomb(Handle timer, disp)
 {
+	disp = EntRefToEntIndex(disp);
 	if (IsValidEntity(disp) == true)
 	{
 		SetVariantInt(heal);
@@ -98,27 +104,30 @@ public Action:Setupbomb(Handle timer, disp)
 
 public Action:ChangedispC1(Handle timer, disp)
 {
+	disp = EntRefToEntIndex(disp);
 	Bombwait=Bombwait/2.2;
 	if (IsValidEntity(disp) == true)
 	{
 		SetEntityRenderColor(disp, r1, g1, b1, 192);
-		CreateTimer(Bombwait, ChangedispC2, disp, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(Bombwait, ChangedispC2, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
 public Action:ChangedispC2(Handle timer, disp)
 {
+	disp = EntRefToEntIndex(disp);
 	Bombwait=Bombwait/2.2;
 	if (IsValidEntity(disp) == true)
 	{
 		SetEntityRenderColor(disp, r2, g2, b2, 192);
-		CreateTimer(Bombwait, ChangedispC1, disp, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(Bombwait, ChangedispC1, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 		
 	}
 }
 
 public Action:totemcondm(Handle timer, disp)
 {
+	disp = EntRefToEntIndex(disp);
 	new Float:pos[3], Float:pos2[3], Float:dista;
 	if (IsValidEntity(disp) == true)
 	{
@@ -168,27 +177,27 @@ public Action:totemcondm(Handle timer, disp)
 			case 0:
 				dist2=0.0;
 			case 1: 
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 2:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 3:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 4:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 5:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 6:
-				CreateTimer(1.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(1.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 7:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 8:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 9:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 10:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 11:
-				CreateTimer(0.5, totemcondm, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondm, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 				
 		}
 	}
@@ -208,6 +217,7 @@ public Action:totemcondm(Handle timer, disp)
 
 public Action:totemcondb(Handle timer, disp)
 {
+	disp = EntRefToEntIndex(disp);
 	new Float:pos[3], Float:pos2[3], Float:dist;
 	if (IsValidEntity(disp) == true)
 	{
@@ -251,15 +261,15 @@ public Action:totemcondb(Handle timer, disp)
 			case 0:
 				dist3=0.0;
 			case 1: 
-				CreateTimer(0.5, totemcondb, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondb, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 2:
-				CreateTimer(0.5, totemcondb, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondb, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 3:
-				CreateTimer(0.5, totemcondb, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondb, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 4:
-				CreateTimer(0.5, totemcondb, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondb, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 			case 6:
-				CreateTimer(0.5, totemcondb, disp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, totemcondb, EntIndexToEntRef(disp), TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 }
@@ -326,8 +336,8 @@ public Action:Rage_totempenser(const String:ability_name[], index)
 	effect1 = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 1, 0);
 	effect2 = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 2, 0);
 	dist2 = FF2_GetAbilityArgumentFloat(index,this_plugin_name,ability_name, 3, 200.0); 
-	dist3 = FF2_GetAbilityArgumentFloat(Boss, this_plugin_name, ability_name, 4, 100.0);
-	totduration = FF2_GetAbilityArgumentFloat(Boss, this_plugin_name, ability_name, 5, 10.0);
+	dist3 = FF2_GetAbilityArgumentFloat(index, this_plugin_name, ability_name, 4, 100.0);
+	totduration = FF2_GetAbilityArgumentFloat(index, this_plugin_name, ability_name, 5, 10.0);
 	heal = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 6, 450); 
 	timeduration = FF2_GetAbilityArgumentFloat(index,this_plugin_name,ability_name, 7, 0.0);	
 	spawnflag = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 8, 0);
@@ -378,17 +388,17 @@ stock SpawnDispenser(int builder, float Position[3], float Angle[3], int level)
 	
 	if (2 <= level)
 	{
-		CreateTimer(1.0, Healdisp, dispenser, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(1.0, Healdisp, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 	if (3 == level)
 	{
-		CreateTimer(2.0, Healdisp, dispenser, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(2.0, Healdisp, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 	if (1 <= timeduration)
 	{
-		CreateTimer(timeduration, Destroydisp, dispenser, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(timeduration, Destroydisp, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 	return dispenser;
@@ -423,10 +433,10 @@ stock SpawnTotempenser(int builder, float Position[3], float Angle[3])
 	
 	if (1 <= timeduration)
 	{
-		CreateTimer(timeduration, Destroydisp, dispenser, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(timeduration, Destroydisp, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
 	}
-	CreateTimer(0.1, totemcondm, dispenser, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(0.1, totemcondb, dispenser, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.1, totemcondm, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.1, totemcondb, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
 	
 	return dispenser;
 
@@ -459,9 +469,9 @@ stock SpawnDispenserBomb(int builder, float Position[3], float Angle[3])
 	
 	AcceptEntityInput(dispenser, "Disable");
 	
-	CreateTimer(Bombwait, Setupbomb, dispenser, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(Bombwait, Setupbomb, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
 	Bombwait=Bombwait/2;
-	CreateTimer(Bombwait, ChangedispC1, dispenser, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(Bombwait, ChangedispC1, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
 
 	
 	return dispenser;

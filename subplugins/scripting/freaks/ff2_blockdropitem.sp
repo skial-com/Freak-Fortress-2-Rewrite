@@ -50,7 +50,7 @@ public Action Command_DropItem(int client, const char[] command, int argc)
 				FF2_GetAbilityArgumentString(bossidx, this_plugin_name, ABILITY_NAME, 1, str, sizeof(str));
 				if(str[0]!='\0')
 				{
-					KickClient(client, str);
+					KickClient(client, "%s", str);
 				}
 				return Plugin_Handled;
 			}

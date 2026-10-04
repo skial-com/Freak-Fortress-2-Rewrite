@@ -73,7 +73,8 @@ public Plugin myinfo =
 
 public void OnMapStart()
 {
-	statusHUD = CreateHudSynchronizer();
+	if (statusHUD == null) // was created every map and never freed
+		statusHUD = CreateHudSynchronizer();
 	
 	/*
      PLEASE
@@ -101,7 +102,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	{
 		Rage_Explosion(ability_name, boss, client); // !!!!
 	}
-	
+	return Plugin_Continue;
 }
 
 void Rage_Explosion(const char[] ability_name, int boss, int client)
@@ -118,7 +119,7 @@ void Rage_Explosion(const char[] ability_name, int boss, int client)
 		if (StuckOrFreeDefiner == 1)
 		{
             StuckOrFree = 1;
-            CreateTimer(0.1, SentryBustPrepare, client); // If 1, boss won't move during the ability
+            CreateTimer(0.1, SentryBustPrepare, GetClientUserId(client)); // If 1, boss won't move during the ability
 		}
 		else if (StuckOrFreeDefiner == 0)
         {
@@ -144,23 +145,27 @@ void Rage_Explosion(const char[] ability_name, int boss, int client)
            PrintToServer("[SBRS] Invalid key. Explosion Sound Enabled.");
            toggleExplosionSound = 1; // 1 is set by default
 		}
-		CreateTimer(DelayBeforeBoom, SentryBusting, client);
+		CreateTimer(DelayBeforeBoom, SentryBusting, GetClientUserId(client));
 }
 
 public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	// amogus
+	return Plugin_Continue;
 }
 
 /*
      sentry busting a nut aaaaaaaaa
 */
-public Action SentryBusting(Handle timer, any bClient)
+public Action SentryBusting(Handle timer, any userid)
 {
+	int bClient = GetClientOfUserId(userid);
+	if (!bClient)
+		return Plugin_Continue;
 	int explosion = CreateEntityByName("env_explosion");
 	float clientPos[3];
 	GetClientAbsOrigin(bClient, clientPos);
-	if (explosion)
+	if (explosion != -1)
 	{
 		DispatchSpawn(explosion);
 		TeleportEntity(explosion, clientPos, NULL_VECTOR, NULL_VECTOR);
@@ -241,6 +246,7 @@ public Action DeleteParticle(Handle timer, int ref) // delet
 	int Ent = EntRefToEntIndex(ref);
 	if(IsValidEntity(Ent))
 		RemoveEntity(Ent);
+	return Plugin_Continue;
 }
 
 /*
@@ -250,7 +256,7 @@ public Action DeleteParticle(Handle timer, int ref) // delet
 stock void DoDamage(int client, int target, int amount) // Originally from Goomba Stomp
 {
 	int pointHurt = CreateEntityByName("point_hurt");
-	if (pointHurt)
+	if (pointHurt != -1)
 	{
 		DispatchKeyValue(target, "targetname", "explodeme");
 		DispatchKeyValue(pointHurt, "DamageTarget", "explodeme");
@@ -292,7 +298,7 @@ stock bool AttachParticle(int Ent, char[] particleType, bool cache=false) // Ori
 	return true;
 }
 
-stock void ReadSound(int bossIdx, const char[] ability_name, int argInt, char soundFile[MAX_SOUND_FILE_LENGTH]) // Took from sarysapub3
+stock void ReadSound(int bossIdx, const char[] ability_name, int argInt, char[] soundFile) // Took from sarysapub3
 {
 	FF2_GetAbilityArgumentString(bossIdx, this_plugin_name, ability_name, argInt, soundFile, MAX_SOUND_FILE_LENGTH);
 	if (strlen(soundFile) > 3)
@@ -303,12 +309,16 @@ stock void ReadSound(int bossIdx, const char[] ability_name, int argInt, char so
 	Timers
 */
 
-public Action SentryBustPrepare(Handle timer, any bClient)
+public Action SentryBustPrepare(Handle timer, any userid)
 {
+	int bClient = GetClientOfUserId(userid);
+	if (!bClient)
+		return Plugin_Continue;
 	if(!TF2_IsPlayerInCondition(bClient, TFCond_Taunting))
 		FakeClientCommand(bClient, "taunt");
 	SetEntityMoveType(bClient, MOVETYPE_NONE);
 	SDKHook(bClient, SDKHook_OnTakeDamage, BlockDamage);
+	return Plugin_Continue;
 }
 
 

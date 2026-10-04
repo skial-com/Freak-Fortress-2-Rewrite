@@ -50,7 +50,7 @@ new bool:PRINT_DEBUG_SPAM = false;
 #define COLOR_BUFFER_SIZE 12
 #define HEX_OR_DEC_STRING_LENGTH 12 // max -2 billion is 11 chars + null termination
 
-#define MAX_PLAYERS_ARRAY 36
+#define MAX_PLAYERS_ARRAY (MAXPLAYERS + 1) // was 36: clients above 35 never got these abilities
 #define MAX_PLAYERS (MAX_PLAYERS_ARRAY < (MaxClients + 1) ? MAX_PLAYERS_ARRAY : (MaxClients + 1))
 #define INVALID_ENTREF INVALID_ENT_REFERENCE
 
@@ -2824,7 +2824,7 @@ stock FindRandomPlayer(bool:isBossTeam, Float:position[3] = NULL_VECTOR, Float:m
 		if (maxDistance > 0.0 && !IsPlayerInRange(clientIdx, position, maxDistance))
 			continue;
 			
-		if (GetEntPropFloat(exclude, Prop_Send, "m_flModelScale") > GetEntPropFloat(clientIdx, Prop_Send, "m_flModelScale"))
+		if (sizeTests && GetEntPropFloat(exclude, Prop_Send, "m_flModelScale") > GetEntPropFloat(clientIdx, Prop_Send, "m_flModelScale")) // sizeTests was set but never checked
 			continue;
 
 		if ((isBossTeam && GetClientTeam(clientIdx) == BossTeam) || (!isBossTeam && GetClientTeam(clientIdx) != BossTeam) || anyTeam)
@@ -2849,7 +2849,7 @@ stock FindRandomPlayer(bool:isBossTeam, Float:position[3] = NULL_VECTOR, Float:m
 		if (maxDistance > 0.0 && !IsPlayerInRange(clientIdx, position, maxDistance))
 			continue;
 			
-		if (GetEntPropFloat(exclude, Prop_Send, "m_flModelScale") > GetEntPropFloat(clientIdx, Prop_Send, "m_flModelScale"))
+		if (sizeTests && GetEntPropFloat(exclude, Prop_Send, "m_flModelScale") > GetEntPropFloat(clientIdx, Prop_Send, "m_flModelScale")) // sizeTests was set but never checked
 			continue;
 
 		if ((isBossTeam && GetClientTeam(clientIdx) == BossTeam) || (!isBossTeam && GetClientTeam(clientIdx) != BossTeam) || anyTeam)
