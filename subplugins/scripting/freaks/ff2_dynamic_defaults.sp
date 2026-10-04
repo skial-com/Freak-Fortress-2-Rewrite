@@ -63,6 +63,12 @@ new Float:OFF_THE_MAP[3] = { 16383.0, 16383.0, -16383.0 };
 
 new RoundInProgress = false;
 
+public OnMapEnd()
+{
+	// a map change mid-round never fires arena_win_panel
+	Event_RoundEnd(INVALID_HANDLE, "", false);
+}
+
 public Plugin:myinfo = {
 	name = "Freak Fortress 2: Dynamic Defaults",
 	author = "sarysa, with a small amount of code by RainBolt Dash",
@@ -1184,7 +1190,7 @@ public DT_Tick(clientIdx, buttons, Float:curTime)
 				
 				// play the sound
 				static String:sound[PLATFORM_MAX_PATH];
-				if (FF2_RandomSound("sound_ability", sound, PLATFORM_MAX_PATH, bossIdx, DJ_UseReload[clientIdx] ? 2 : 1))
+				if (FF2_RandomSound("sound_ability", sound, PLATFORM_MAX_PATH, bossIdx, DT_UseReload[clientIdx] ? 2 : 1))
 				{
 					EmitSoundToAll(sound, clientIdx, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, clientIdx, bossOrigin, NULL_VECTOR, true, 0.0);
 					EmitSoundToAll(sound, clientIdx, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, clientIdx, bossOrigin, NULL_VECTOR, true, 0.0);
@@ -1713,6 +1719,10 @@ public Action:DP_OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &dam
 
 public DP_OnDeflect(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	// also fires for reflected projectiles (weaponid != 0); only an airblasted player unlatches
+	if (GetEventInt(event, "weaponid") != 0)
+		return;
+
 	new victim = GetClientOfUserId(GetEventInt(event, "ownerid"));
 	if (!IsLivingPlayer(victim) || !DP_CanUse[victim])
 		return;
@@ -1880,7 +1890,7 @@ public bool:DP_AttemptLatch(clientIdx)
 						angle[0] = -90.0;
 						TR_TraceRayFilter(endPos, angle, DP_TraceOptions[clientIdx], RayType_Infinite, TraceWallsOnly);
 						TR_GetEndPosition(yetAnotherEndPos);
-						if (GetVectorDistance(otherEndPos, yetAnotherEndPos) > bossHeadPos[2] - bossFeetPos[2])
+						if (GetVectorDistance(endPos, yetAnotherEndPos) > bossHeadPos[2] - bossFeetPos[2])
 							return false; // we've gone off the edge. time to end this latch and allow the user to fly off.
 					}
 				}
@@ -1907,6 +1917,8 @@ public DP_Tick(clientIdx, &buttons, Float:curTime)
 			DP_Latch(clientIdx, curTime);
 			justLatched = true;
 		}
+		else
+			DP_IgnoreActivationUntil[clientIdx] = curTime + DP_MOTION_INTERVAL; // retry at the motion interval, not every tick
 	}
 	else if (!activationKeyDown && DP_Latched[clientIdx])
 	{
@@ -1941,7 +1953,7 @@ public DP_Tick(clientIdx, &buttons, Float:curTime)
 	DP_JumpKeyDown[clientIdx] = jumpKeyDown;
 	
 	// check for validity of latching and see if we need to reangle
-	if (DP_Latched[clientIdx])
+	if (DP_Latched[clientIdx] && curTime >= DP_NextMoveAt[clientIdx])
 	{
 		if (!justLatched && !DP_AttemptLatch(clientIdx))
 		{
@@ -2069,22 +2081,22 @@ public DP_Tick(clientIdx, &buttons, Float:curTime)
 		SetEntProp(clientIdx, Prop_Send, "m_iAirDash", 0); // restore double jumps, if applicable
 	}
 
-	// used for HUD state
-	if (DP_Latched[clientIdx])
-		DP_HUDState[clientIdx] = DP_HUD_STATE_USING;
-	else if (!CheckGroundClearance(clientIdx, DP_REQUIRED_GROUND_CLEARANCE, true))
-	{
-		if (GetEntityFlags(clientIdx) & (FL_SWIM | FL_INWATER))
-			DP_HUDState[clientIdx] = DP_HUD_STATE_IN_WATER;
-		else
-			DP_HUDState[clientIdx] = DP_HUD_STATE_ON_GROUND;
-	}
-	else
-		DP_HUDState[clientIdx] = DP_HUD_STATE_AVAILABLE;
-		
 	// print the HUD message
 	if (curTime >= DP_NextHUDAt[clientIdx])
 	{
+		// HUD state needs a trace, so only work it out when the HUD is drawn
+		if (DP_Latched[clientIdx])
+			DP_HUDState[clientIdx] = DP_HUD_STATE_USING;
+		else if (!CheckGroundClearance(clientIdx, DP_REQUIRED_GROUND_CLEARANCE, true))
+		{
+			if (GetEntityFlags(clientIdx) & (FL_SWIM | FL_INWATER))
+				DP_HUDState[clientIdx] = DP_HUD_STATE_IN_WATER;
+			else
+				DP_HUDState[clientIdx] = DP_HUD_STATE_ON_GROUND;
+		}
+		else
+			DP_HUDState[clientIdx] = DP_HUD_STATE_AVAILABLE;
+
 		if (!(FF2_GetFF2flags(clientIdx) & FF2FLAG_HUDDISABLED) || DD_BypassHUDRestrictions[clientIdx])
 		{
 			static String:hudMessage[MAX_CENTER_TEXT_LENGTH];

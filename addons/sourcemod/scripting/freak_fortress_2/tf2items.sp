@@ -319,7 +319,8 @@ stock int TF2Items_CreateFromStruct(int client, WeaponData data, ArrayList cfgs 
 		entity = TF2Items_GiveNamedItem(client, item);
 		delete item;
 
-		GetEntityNetClass(entity, buffer, sizeof(buffer));
+		if(entity != -1)
+			GetEntityNetClass(entity, buffer, sizeof(buffer));
 	}
 	#endif
 	

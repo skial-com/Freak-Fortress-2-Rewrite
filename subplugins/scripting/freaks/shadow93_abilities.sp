@@ -179,7 +179,7 @@ int minToSpawn2[MAXPLAYERS+1];
 Handle MinionKV[MAXPLAYERS+1];
 bool ReanimatorEventsHooked;
 bool BroadcastAudioHooked;
-int SummonerIndex[MAXPLAYERS+1];
+int SummonerIndex[MAXPLAYERS+1]={-1, ...};
 VoiceMode VOMode[MAXPLAYERS+1];
 MoveType mMoveType[MAXPLAYERS+1];
 int minionMaxHP[MAXPLAYERS+1];
@@ -337,7 +337,7 @@ public Action:Event_Countdown(Handle:event, const String:name[], bool:dontBroadc
 	{
 		HasOuttro=false;
 		revivemarkers=-1;
-		for(new client=1;client<MaxClients;client++)
+		for(new client=1;client<=MaxClients;client++)
 		{
 			bEnableSuperDuperJump[client]=false;
 			SummonerIndex[client]=-1;
@@ -454,6 +454,8 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 
 stock void ResetSalmonSettings(int client)
 {
+	// round end runs this for everyone; only minions had their movetype/scale changed
+	bool wasMinion = SummonerIndex[client] != -1 || HookHealth[client] || MinionKV[client] != null;
 	delete MinionKV[client];
 	VOMode[client]=VoiceMode_Normal;
 	SummonerIndex[client]=-1;
@@ -469,9 +471,13 @@ stock void ResetSalmonSettings(int client)
 		SetEntityGravity(client, 1.0);
 	}
 			
+	if(!wasMinion)
+		return;
+	
 	if(mMoveType[client]!=MOVETYPE_WALK)
 	{
 		SetEntityMoveType(client, MOVETYPE_WALK);
+		mMoveType[client]=MOVETYPE_WALK;
 	}
 			
 	if(GetEntPropFloat(client, Prop_Send, "m_flModelScale")!=1.0)

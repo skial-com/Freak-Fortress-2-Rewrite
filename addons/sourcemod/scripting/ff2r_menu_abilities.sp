@@ -1189,7 +1189,8 @@ void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		if(victim)
 		{
 			int attacker = GetClientOfUserId(event.GetInt("attacker"));
-			if(victim != attacker && attacker > 0 && attacker <= MaxClients)
+			// a Dead Ringer feign isn't a kill
+			if(victim != attacker && attacker > 0 && attacker <= MaxClients && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
 			{
 				if(MenuTimer[attacker] && !SetupMode[attacker])
 				{

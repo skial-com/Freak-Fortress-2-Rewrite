@@ -289,6 +289,8 @@ public Action:totemcondb(Handle timer, disp)
 public Action:Rage_dispenser(const String:ability_name[], index)
 {
 	Boss = GetClientOfUserId(FF2_GetBossUserId(index));
+	if(Boss <= 0)
+		return;
 	new level = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 1, 2); 
 	heal = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 2, 450); 
 	timeduration = FF2_GetAbilityArgumentFloat(index,this_plugin_name,ability_name, 3, 0.0);
@@ -314,6 +316,8 @@ public Action:Rage_dispenser(const String:ability_name[], index)
 public Action:Rage_Bombdispenser(const String:ability_name[], index)
 {
 	Boss = GetClientOfUserId(FF2_GetBossUserId(index));
+	if(Boss <= 0)
+		return;
 	Bombwait = FF2_GetAbilityArgumentFloat(index,this_plugin_name,ability_name, 1, 2.0); 
 	heal = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 2, 450); 
 	radiuss = FF2_GetAbilityArgumentFloat(index,this_plugin_name,ability_name, 3, 0.0);
@@ -344,6 +348,8 @@ public Action:Rage_Bombdispenser(const String:ability_name[], index)
 public Action:Rage_totempenser(const String:ability_name[], index)
 {
 	Boss = GetClientOfUserId(FF2_GetBossUserId(index));
+	if(Boss <= 0)
+		return;
 	effect1 = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 1, 0);
 	effect2 = FF2_GetAbilityArgument(index,this_plugin_name,ability_name, 2, 0);
 	dist2 = FF2_GetAbilityArgumentFloat(index,this_plugin_name,ability_name, 3, 200.0); 

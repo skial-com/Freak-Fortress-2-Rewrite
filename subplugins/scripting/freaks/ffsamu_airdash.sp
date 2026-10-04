@@ -220,7 +220,15 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	for(new client = 1; client <= MaxClients; client++)
 	{
+		// stop the recharge chain now rather than at next round start ("Dash recharged" between rounds)
+		if(g_hRechargeHandle[client] != INVALID_HANDLE)
+			KillTimer(g_hRechargeHandle[client]);
+		if(g_hDashReadyHandle[client] != INVALID_HANDLE)
+			KillTimer(g_hDashReadyHandle[client]);
+		g_hRechargeHandle[client] = INVALID_HANDLE;
+		g_hDashReadyHandle[client] = INVALID_HANDLE;
 		g_bClientDash[client] = false;
+		g_bHasDash[client] = false;
 	}
 	return Plugin_Continue;
 }

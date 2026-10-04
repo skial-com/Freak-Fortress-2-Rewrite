@@ -971,12 +971,13 @@ public void OnClientDisconnect(int client)
 
 public Action OnClientCommandKeyValues(int client, KeyValues kv)
 {
-	if(!HasAbility[client] || !IsPlayerAlive(client))
+	// HasAbility only gates the inspect key; weapon steal pickups don't need ability management
+	if((!HasAbility[client] && !(CanPickup[client] && ClassSwap[client])) || !IsPlayerAlive(client))
 		return Plugin_Continue;
 	
 	char command[64];
 	kv.GetSectionName(command, sizeof(command));
-	if(StrContains(command, "inspect_server") == 1)
+	if(HasAbility[client] && StrContains(command, "inspect_server") == 1)
 	{
 		PressedInspectKey[client] = command[0] == '+';
 		return Plugin_Handled;

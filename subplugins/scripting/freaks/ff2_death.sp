@@ -49,6 +49,17 @@ float WankerPissDuration[MAXPLAYERS+1]; 				//3
 
 /* Rage_TheRock */
 float Rockduration[MAXPLAYERS+1];						//1
+float RockEnd[MAXPLAYERS+1];							// game time the current rock rage ends
+
+/* OnPlayerRunCmd: which tick abilities each boss has, refreshed once a second */
+#define RUNCMD_HEFFE		(1<<0)
+#define RUNCMD_HEFFEJUMP	(1<<1)
+#define RUNCMD_JUMPMANAGER	(1<<2)
+#define RUNCMD_MAGICJUMP	(1<<3)
+#define RUNCMD_MAGICTELE	(1<<4)
+#define RUNCMD_SPELLATTACK	(1<<5)
+int RunCmdAbilities[MAXPLAYERS+1];
+float RunCmdAbilitiesAt[MAXPLAYERS+1];
 
 /* Rage_Mine */
 int FruitCanRemoveSentry[MAXPLAYERS+1];				//2
@@ -365,7 +376,8 @@ public void Event_RoundStart(Event hEvent, const char[] strName, bool bDontBroad
 		if(FF2_HasAbility(iIndex, this_plugin_name, "special_noknockback"))
 			SDKHook(iBoss, SDKHook_OnTakeDamage, NKBOnTakeDamage);
 		
-		SDKHook(iBoss, SDKHook_OnTakeDamage, CheckEnvironmentalDamage);
+		if(FF2_HasAbility(iIndex, this_plugin_name, "charge_magicjump") || FF2_HasAbility(iIndex, this_plugin_name, "charge_magictele") || FF2_HasAbility(iIndex, this_plugin_name, "special_jumpmanager"))
+			SDKHook(iBoss, SDKHook_OnTakeDamage, CheckEnvironmentalDamage);
 	}
 }
 
@@ -388,6 +400,8 @@ public void Event_RoundEnd(Event hEvent, const char[] strName, bool bDontBroadca
 		SDKUnhook(iClient, SDKHook_OnTakeDamage, NKBOnTakeDamage);
 		SDKUnhook(iClient, SDKHook_PreThink, NoRage_Think);
 		SDKUnhook(iClient, SDKHook_TraceAttack, TraceAttack);
+		SDKUnhook(iClient, SDKHook_WeaponCanSwitchToPost, WeaponSwitch);
+		RunCmdAbilitiesAt[iClient] = 0.0;
 		
 		if(MLG[iClient])
 		{
@@ -493,12 +507,13 @@ public Action Event_Jarate(UserMsg msg_id, BfRead msg, const int[] players, int 
 	{
 		if(FF2_HasAbility(0, this_plugin_name, "rage_wanker"))
 		{
+			float flDuration = WankerPissDuration[iClient];
 			if (WankerPissMode[iClient])
 			{
 				CreateTimer(0.1, Timer_NoPiss, GetClientUserId(iVictim));
-				WankerPissDuration[iClient] *= 2.0;
+				flDuration *= 2.0;
 			}
-			TF2_MakeBleed(iVictim, iClient, WankerPissDuration[iClient]);
+			TF2_MakeBleed(iVictim, iClient, flDuration);
 		}
 	}
 	return Plugin_Continue;
@@ -652,7 +667,25 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float vV
 	if(!FF2_IsFF2Enabled() || FF2_GetRoundState() != 1)
 		return Plugin_Continue;
 	
-	if(FF2_HasAbility(iBoss, this_plugin_name, "rage_heffe"))
+	// FF2_HasAbility is costly under FF2R; look the tick abilities up once a second, not every tick
+	float flNow = GetGameTime();
+	if(flNow >= RunCmdAbilitiesAt[iClient])
+	{
+		RunCmdAbilitiesAt[iClient] = flNow + 1.0;
+		int mask;
+		if(FF2_HasAbility(iBoss, this_plugin_name, "rage_heffe")) mask |= RUNCMD_HEFFE;
+		if(FF2_HasAbility(iBoss, this_plugin_name, "dot_heffe_jump")) mask |= RUNCMD_HEFFEJUMP;
+		if(FF2_HasAbility(iBoss, this_plugin_name, "special_jumpmanager")) mask |= RUNCMD_JUMPMANAGER;
+		if(FF2_HasAbility(iBoss, this_plugin_name, "charge_magicjump")) mask |= RUNCMD_MAGICJUMP;
+		if(FF2_HasAbility(iBoss, this_plugin_name, "charge_magictele")) mask |= RUNCMD_MAGICTELE;
+		if(FF2_HasAbility(iBoss, this_plugin_name, "special_spellattack")) mask |= RUNCMD_SPELLATTACK;
+		RunCmdAbilities[iClient] = mask;
+	}
+	int abilities = RunCmdAbilities[iClient];
+	if(!abilities)
+		return Plugin_Continue;
+	
+	if(abilities & RUNCMD_HEFFE)
 	{
 		if(!FF2_IsFF2Enabled() || FF2_GetRoundState() != 1)
 			return Plugin_Continue;
@@ -688,7 +721,7 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float vV
 		}
 	}
 	
-	if(FF2_HasAbility(iBoss, this_plugin_name, "dot_heffe_jump"))
+	if(abilities & RUNCMD_HEFFEJUMP)
 	{
 		if(iButtons & IN_ATTACK2)
 		{
@@ -701,7 +734,7 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float vV
 		}
 	}
 	
-	if(FF2_HasAbility(iBoss, this_plugin_name, "special_jumpmanager"))
+	if(abilities & RUNCMD_JUMPMANAGER)
 	{
 		JM_Tick(iClient, iButtons, GetEngineTime());
 		
@@ -721,17 +754,17 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float vV
 		}
 	}
 	
-	if(FF2_HasAbility(iBoss, this_plugin_name, "charge_magicjump"))
+	if(abilities & RUNCMD_MAGICJUMP)
 	{
 		MJ_Tick(iClient, iButtons, GetEngineTime());
 	}
 	
-	if(FF2_HasAbility(iBoss, this_plugin_name, "charge_magictele"))
+	if(abilities & RUNCMD_MAGICTELE)
 	{	
 		MT_Tick(iClient, iButtons, GetEngineTime());
 	}
 	
-	if(FF2_HasAbility(iBoss, this_plugin_name, "special_spellattack"))
+	if(abilities & RUNCMD_SPELLATTACK)
 	{
 		if(iButtons & IN_ATTACK)
 		{
@@ -842,8 +875,14 @@ void Rage_TheRock(int iBoss)
 {
 	int iClient = GetClientOfUserId(FF2_GetBossUserId(iBoss));
 
-	if(GetClientTeam(iClient)==BossTeam)
+	if(iClient > 0 && GetClientTeam(iClient)==BossTeam)
 	{
+		// Read here so bosses made after round start get it too
+		Rockduration[iClient] = FF2_GetAbilityArgumentFloat(iBoss, this_plugin_name, "rage_therock", 1, 20.0);
+		RockEnd[iClient] = GetGameTime() + Rockduration[iClient];
+
+		// A rage during a rage extends it; SDKHook doesn't dedupe, so never stack the hook
+		SDKUnhook(iClient, SDKHook_StartTouch, OnRockTouch);
 		SDKHook(iClient, SDKHook_StartTouch, OnRockTouch);
 		TF2_AddCondition(iClient, TFCond_MegaHeal, Rockduration[iClient]);
 		TF2_AddCondition(iClient, TFCond_SpeedBuffAlly, Rockduration[iClient]);
@@ -909,7 +948,9 @@ void Rage_SkeleSummon(int iBoss, const char[] ability_name)
 	int iClient = GetClientOfUserId(FF2_GetBossUserId(iBoss));
 	SkeleNumberOfSpawns[iClient] = FF2_GetAbilityArgument(iBoss, this_plugin_name, ability_name, 1);
 	
-	SDKHook(ShootProjectile(iClient, "tf_projectile_spellspawnhorde"), SDKHook_StartTouch, Projectile_Touch);
+	int iProj = ShootProjectile(iClient, "tf_projectile_spellspawnhorde");
+	if(iProj != -1)
+		SDKHook(iProj, SDKHook_StartTouch, Projectile_Touch);
 }
 
 void Rage_MLG(int iBoss, const char[] ability_name)
@@ -962,6 +1003,8 @@ void Charge_RocketSpawn(int iBoss, int iSlot, int iAction)	// Shamelessly stolen
 				pos[2]+=63;
 				
 				int iProj = CreateEntityByName("tf_projectile_rocket");
+				if(iProj == -1)
+					return;
 				SetVariantInt(BossTeam);
 				AcceptEntityInput(iProj, "TeamNum", -1, -1, 0);
 				SetVariantInt(BossTeam);
@@ -1064,6 +1107,10 @@ public Action UnHook(Handle hTimer, any userid)
 	int Boss = GetClientOfUserId(userid);
 	if(IsValidClient(Boss))
 	{
+		// An earlier rage's timer; a later rage is still running
+		if(GetGameTime() < RockEnd[Boss] - 0.1)
+			return Plugin_Continue;
+
 		SDKUnhook(Boss, SDKHook_StartTouch, OnRockTouch);
 		SetEntProp(Boss, Prop_Send, "m_CollisionGroup", 5);
 	}
@@ -1849,12 +1896,14 @@ public Action OnTouchBeam(int brush, int entity)
 public Action Projectile_Touch(int iProj, int iOther)
 {
 	int iClient = GetEntPropEnt(iProj, Prop_Send, "m_hOwnerEntity");
+	if(!IsValidClient(iClient))
+		return Plugin_Continue;
 	char strClassname[11];
 	if((GetEntityClassname(iOther, strClassname, 11) && StrEqual(strClassname, "worldspawn")) || (iOther > 0 && iOther <= MaxClients))
 	{
 		float flPos[3], flAng[3];
 		GetEntPropVector(iProj, Prop_Data, "m_vecAbsOrigin", flPos);
-		for (int i = 0; i <= SkeleNumberOfSpawns[iClient]; i++)
+		for (int i = 0; i < SkeleNumberOfSpawns[iClient]; i++)
 		{
 			flAng[0] = GetRandomFloat(-500.0, 500.0);
 			flAng[1] = GetRandomFloat(-500.0, 500.0);
@@ -1956,6 +2005,7 @@ void PerformSmite(int iClient, int iTarget)
 {
 	float flStart[3], flEnd[3], flCeil[3];
 	GetClientAbsOrigin(iTarget, flEnd);
+	flCeil = flEnd;
 	GetMapCeiling(flCeil);
 	flEnd[2] -= 26; // increase y-axis by 26 to strike at player's chest instead of the ground
 	
@@ -2261,7 +2311,8 @@ stock bool CylinderCollision(float cylinderOrigin[3], float colliderOrigin[3], f
 
 stock bool IsPlayerInvincible(int iClient)
 {
-	return TF2_IsPlayerInCondition(iClient, TFCond_Ubercharged) || TF2_IsPlayerInCondition(iClient, TFCond_UberchargedCanteen) || TF2_IsPlayerInCondition(iClient, TFCond_Bonked);
+	return TF2_IsPlayerInCondition(iClient, TFCond_Ubercharged) || TF2_IsPlayerInCondition(iClient, TFCond_UberchargedCanteen) || TF2_IsPlayerInCondition(iClient, TFCond_Bonked)
+		|| TF2_IsPlayerInCondition(iClient, TFCond_UberchargedHidden) || TF2_IsPlayerInCondition(iClient, TFCond_UberchargedOnTakeDamage) || TF2_IsPlayerInCondition(iClient, TFCond_PreventDeath);
 }
 
 stock int GetClosestClient(int iClient)

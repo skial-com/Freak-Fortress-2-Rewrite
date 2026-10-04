@@ -119,7 +119,7 @@ void Rage_Explosion(const char[] ability_name, int boss, int client)
 		if (StuckOrFreeDefiner == 1)
 		{
             StuckOrFree = 1;
-            CreateTimer(0.1, SentryBustPrepare, GetClientUserId(client)); // If 1, boss won't move during the ability
+            CreateTimer(0.1, SentryBustPrepare, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE); // If 1, boss won't move during the ability
 		}
 		else if (StuckOrFreeDefiner == 0)
         {
@@ -145,7 +145,7 @@ void Rage_Explosion(const char[] ability_name, int boss, int client)
            PrintToServer("[SBRS] Invalid key. Explosion Sound Enabled.");
            toggleExplosionSound = 1; // 1 is set by default
 		}
-		CreateTimer(DelayBeforeBoom, SentryBusting, GetClientUserId(client));
+		CreateTimer(DelayBeforeBoom, SentryBusting, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -162,6 +162,14 @@ public Action SentryBusting(Handle timer, any userid)
 	int bClient = GetClientOfUserId(userid);
 	if (!bClient)
 		return Plugin_Continue;
+	if (!IsPlayerAlive(bClient) || FF2_GetRoundState() != 1)
+	{
+		// The boss died or the round ended during the fuse: no blast, just undo the lock
+		SDKUnhook(bClient, SDKHook_OnTakeDamage, BlockDamage);
+		if (IsPlayerAlive(bClient))
+			SetEntityMoveType(bClient, MOVETYPE_WALK);
+		return Plugin_Continue;
+	}
 	int explosion = CreateEntityByName("env_explosion");
 	float clientPos[3];
 	GetClientAbsOrigin(bClient, clientPos);
@@ -228,11 +236,11 @@ public Action BlockDamage(int client, int &attacker, int &inflictor, float &dama
 	int bClient = FF2_GetBossIndex(client);
 	if(bClient != -1)
 	{
-		if(GetClientTeam(client) != FF2_GetBossTeam())
+		if(GetClientTeam(client) != FF2_GetBossTeam() && attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
 		{
 			FF2_GetBossSpecial(bClient,spcl,64,0);
 			SetHudTextParams(-1.0, 0.45, 4.0, 255, 255, 255, 255);
-			ShowSyncHudText(attacker, statusHUD, "%t","time_to_kaboom",spcl);
+			ShowSyncHudText(attacker, statusHUD, "%s is immune to the Sentry Buster blast!", spcl);
 		}	
 		return Plugin_Stop;
 	}
@@ -312,7 +320,7 @@ stock void ReadSound(int bossIdx, const char[] ability_name, int argInt, char[] 
 public Action SentryBustPrepare(Handle timer, any userid)
 {
 	int bClient = GetClientOfUserId(userid);
-	if (!bClient)
+	if (!bClient || !IsPlayerAlive(bClient))
 		return Plugin_Continue;
 	if(!TF2_IsPlayerInCondition(bClient, TFCond_Taunting))
 		FakeClientCommand(bClient, "taunt");

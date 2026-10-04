@@ -381,6 +381,7 @@ float SpecialUber[MAXTF2PLAYERS];
 
 Handle OverlayTimer[MAXTF2PLAYERS];
 bool OverlayMuffled[MAXTF2PLAYERS];
+bool MuffleHooked;
 
 bool PlayerSuicide[MAXTF2PLAYERS];
 int CloneOwner[MAXTF2PLAYERS];
@@ -602,7 +603,8 @@ public void OnLibraryRemoved(const char[] name)
 
 public void OnClientPutInServer(int client)
 {
-	SDKHook(client, SDKHook_SetTransmit, Hook_SetTransmit);
+	if(MuffleHooked)
+		SDKHook(client, SDKHook_SetTransmit, Hook_SetTransmit);
 	if(TimescaleTimer && !IsFakeClient(client))
 		CvarCheats.ReplicateToClient(client, "1");
 }
@@ -612,6 +614,7 @@ public void OnClientDisconnect(int client)
 	SpecialUber[client] = 0.0;
 	SoloVictim[client] = false;
 	OverlayMuffled[client] = false;
+	UpdateMuffleHooks();
 	CloneOwner[client] = 0;
 	CloneIdle[client] = false;
 	CloneLowPrio[client] = false;
@@ -1453,6 +1456,7 @@ public void FF2R_OnAbility(int client, const char[] ability, AbilityData cfg)
 					victim[victims++] = target;
 				
 				OverlayMuffled[target] = muffle;
+				UpdateMuffleHooks();
 			}
 		}
 
@@ -1552,7 +1556,9 @@ public void FF2R_OnAbility(int client, const char[] ability, AbilityData cfg)
 	}
 	else if(!StrContains(ability, "rage_explosive_dance", false))
 	{
-		LastMoveType[client] = GetEntityMoveType(client);
+		MoveType movetype = GetEntityMoveType(client);
+		if(movetype != MOVETYPE_NONE)	// already dancing; keep the movetype from before
+			LastMoveType[client] = movetype;
 		SetEntityMoveType(client, MOVETYPE_NONE);
 		
 		DataPack pack;
@@ -1924,6 +1930,8 @@ void OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
 	for(int client = 1; client <= MaxClients; client++)
 	{
+		SoloVictim[client] = false;
+		
 		if(IsClientInGame(client))
 		{
 			CloneOwner[client] = 0;
@@ -1942,6 +1950,35 @@ Action OnKermitSewerSlide(int client, const char[] command, int argc)
 	// Punish kill binding during the round (pro or anti clone)
 	PlayerSuicide[client] = true;
 	return Plugin_Continue;
+}
+
+// SetTransmit runs for every player pair on every snapshot, so only hook it while someone is muffled
+void UpdateMuffleHooks()
+{
+	bool any;
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(OverlayMuffled[i])
+		{
+			any = true;
+			break;
+		}
+	}
+	
+	if(any == MuffleHooked)
+		return;
+	
+	MuffleHooked = any;
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(!IsClientInGame(i))
+			continue;
+		
+		if(any)
+			SDKHook(i, SDKHook_SetTransmit, Hook_SetTransmit);
+		else
+			SDKUnhook(i, SDKHook_SetTransmit, Hook_SetTransmit);
+	}
 }
 
 Action Hook_SetTransmit(int client, int target)
@@ -2323,6 +2360,7 @@ void Rage_TradeSpam(int client, ConfigData cfg, const char[] ability, int phase)
 			victim[victims++] = target;
 			
 			OverlayMuffled[target] = (muffle > 1 || (!more && muffle));
+			UpdateMuffleHooks();
 		}
 	}
 	
@@ -2956,6 +2994,7 @@ Action Timer_RemoveOverlay(Handle timer, int client)
 {
 	OverlayTimer[client] = null;
 	OverlayMuffled[client] = false;
+	UpdateMuffleHooks();
 	
 	if(IsClientInGame(client))
 	{

@@ -16,6 +16,8 @@ int killing_mann_life;
 bool HasSpellAbility[MAXPLAYERS+1];
 bool SpellsAreOnCoolDown[MAXPLAYERS+1];
 float Spellragecost[MAXPLAYERS+1];
+int SpellButtonMode[MAXPLAYERS+1];
+float SpellErrorHudAt[MAXPLAYERS+1];
 float SpellHudNotificationAt[MAXPLAYERS+1]={FAR_FUTURE, ...};
 float SpellsCooldownEndsIn[MAXPLAYERS+1]={FAR_FUTURE, ...};
 int spellsnumber;
@@ -64,6 +66,8 @@ public Action event_round_start(Event event, const char[] name, bool dontBroadca
 			if(FF2_HasAbility(bossIdx, this_plugin_name, SPECIALSPELLS))
 			{
 				Spellragecost[clientIdx]=FF2_GetAbilityArgumentFloat(bossIdx, this_plugin_name, SPECIALSPELLS, 2);
+				SpellButtonMode[clientIdx]=FF2_GetAbilityArgument(bossIdx, this_plugin_name, SPECIALSPELLS, 1); // Use RELOAD, or SPECIAL to activate ability
+				SpellErrorHudAt[clientIdx]=0.0;
 				SpellHudNotificationAt[clientIdx]=GetEngineTime()+1.0;
 				HasSpellAbility[clientIdx]=true;
 				
@@ -122,11 +126,12 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	if(!HasSpellAbility[client])
 		return Plugin_Continue;
 	
-	int bossIdx=FF2_GetBossIndex(client);
-	if(bossIdx>=0 && FF2_HasAbility(bossIdx, this_plugin_name, SPECIALSPELLS))
+	// HasSpellAbility and the button mode are set at round start; don't look them up every tick
+	int buttonmode=SpellButtonMode[client];
+	if(buttonmode==2 &&(buttons & IN_ATTACK3) || buttonmode==1 && (buttons & IN_RELOAD))
 	{
-		int buttonmode=FF2_GetAbilityArgument(bossIdx, this_plugin_name, SPECIALSPELLS, 1); // Use RELOAD, or SPECIAL to activate ability
-		if(buttonmode==2 &&(buttons & IN_ATTACK3) || buttonmode==1 && (buttons & IN_RELOAD))
+		int bossIdx=FF2_GetBossIndex(client);
+		if(bossIdx>=0)
 		{
 			if(SpellsAreOnCoolDown[client]) // Prevent ability from firing if ability is on cooldown
 			{
@@ -135,8 +140,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 					case 1: buttons &= ~IN_RELOAD;
 					case 2: buttons &= ~IN_ATTACK3;
 				}
-				SetHudTextParams(-1.0, 0.96, 3.0, 255, 0, 0, 255);
-				ShowHudText(client, -1, SpellsHUDText[client][0]);	
+				ShowSpellErrorHud(client, SpellsHUDText[client][0], 0);
 				return Plugin_Changed;
 			}
 			
@@ -147,8 +151,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 					case 1: buttons &= ~IN_RELOAD;
 					case 2: buttons &= ~IN_ATTACK3;
 				}
-				SetHudTextParams(-1.0, 0.96, 3.0, 255, 0, 0, 255);
-				ShowHudText(client, -1, SpellsHUDText[client][5], RoundFloat(Spellragecost[client]));	
+				ShowSpellErrorHud(client, SpellsHUDText[client][5], RoundFloat(Spellragecost[client]));
 				return Plugin_Changed;
 			}
 			
@@ -168,6 +171,18 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		return Plugin_Continue;
 	}
 	return Plugin_Continue;
+}
+
+// Holding the key while blocked would send a HUD message every tick; twice a second is plenty
+void ShowSpellErrorHud(int client, const char[] text, int value)
+{
+	float now = GetEngineTime();
+	if(now < SpellErrorHudAt[client])
+		return;
+	
+	SpellErrorHudAt[client] = now + 0.5;
+	SetHudTextParams(-1.0, 0.96, 3.0, 255, 0, 0, 255);
+	ShowHudText(client, -1, text, value);
 }
 
 public void CastSpell(int client, int Spellsnumber)

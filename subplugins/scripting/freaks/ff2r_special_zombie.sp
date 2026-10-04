@@ -139,6 +139,10 @@ public Action Timer_Respawn(Handle timer, DataPack pack)
 	int clientIdx = GetClientOfUserId(pack.ReadCell());
 	int targetIdx = GetClientOfUserId(pack.ReadCell());	
 	
+	// kills after the round is decided (humiliation) don't make clones
+	if(GameRules_GetRoundState() == RoundState_TeamWin)
+		return Plugin_Continue;
+	
 	if(targetIdx && IsValidClient(targetIdx) && clientIdx && IsValidClient(clientIdx) && IsPlayerAlive(clientIdx))
 	{
 		AbilityData ability = FF2R_GetBossData(clientIdx).GetAbility("clone_on_death");

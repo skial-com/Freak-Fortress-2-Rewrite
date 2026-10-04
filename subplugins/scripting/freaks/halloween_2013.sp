@@ -497,6 +497,16 @@ public event_round_end(Handle:event, const String:name[], bool:dontBroadcast)
 
         TerminateHidden();
     }
+    else if(gb_Doom)
+    {
+        // stop item drops, kill overlays and berserk explodes through bonus time and the next preround
+        gb_Doom = false;
+        for(new i=1; i<=MaxClients; i++)
+        {
+            if(IsClientInGame(i) && !IsFakeClient(i) && GetClientTeam(i) == g_BossTeam)
+                SetOverlay(i, "");
+        }
+    }
     
     g_boss = 0;		// just in case somone suicides or someshit and the timer is still going :/
 }
@@ -524,7 +534,7 @@ public Action:event_player_death(Handle:hEvent, const String:strEventName[], boo
             
             if(client > 0 && client <= MaxClients && IsClientInGame(client))
             {
-                if(GetClientOfUserId(GetEventInt(hEvent,"attacker")) == g_boss)			// spawn trophy skulls for all nonboss
+                if(GetClientOfUserId(GetEventInt(hEvent,"attacker")) == g_boss && !(GetEventInt(hEvent, "death_flags") & TF_DEATHFLAG_DEADRINGER))	// spawn trophy skulls for all nonboss (not for feigns)
                 {
                     SpawnTrophy(client);
                 }
@@ -693,10 +703,18 @@ public TF2_OnConditionRemoved(client, TFCond:condition)
 
 public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 {
-    if(gb_Doom && victim != attacker && attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker) && GetClientTeam(attacker) == g_BossTeam && TF2_IsPlayerInCondition(attacker, TFCond_CritHype))
+    // Post still fires when the hit was blocked (uber, bonk, a shield FF2R broke), so check it landed
+    if(gb_Doom && damage > 0.0 && victim != attacker && attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker) && GetClientTeam(attacker) == g_BossTeam && TF2_IsPlayerInCondition(attacker, TFCond_CritHype) && !IsInvulnerable(victim))
     {
         FakeClientCommand(victim, "Explode");									// ff2's ontakedamage also hits here if we used ontakedamage....
     }
+}
+
+bool:IsInvulnerable(client)
+{
+    return TF2_IsPlayerInCondition(client, TFCond_Ubercharged) || TF2_IsPlayerInCondition(client, TFCond_UberchargedCanteen)
+        || TF2_IsPlayerInCondition(client, TFCond_UberchargedHidden) || TF2_IsPlayerInCondition(client, TFCond_UberchargedOnTakeDamage)
+        || TF2_IsPlayerInCondition(client, TFCond_Bonked) || TF2_IsPlayerInCondition(client, TFCond_PreventDeath);
 }
 
 public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
