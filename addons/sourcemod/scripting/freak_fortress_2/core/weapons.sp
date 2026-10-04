@@ -389,12 +389,13 @@ static void Weapons_SpawnFrame(int ref)
 
 	#if defined IS_MAIN_FF2
 	bool temp;
-	char loadout[32];
+	char loadout[32], custom[64];
 	Client(client).GetLoadout(loadout, sizeof(loadout));
-	ConfigMap cfg = FindWeaponSection(entity, loadout, _, client, temp);
+	ConfigMap cfg = FindWeaponSection(entity, loadout, custom, client, temp);
 	#else
 	bool temp = true;
-	ConfigMap cfg = FindWeaponSection(entity, _, client);
+	char custom[64];
+	ConfigMap cfg = FindWeaponSection(entity, custom, client);
 	#endif
 
 	if(!cfg)
@@ -512,9 +513,10 @@ static void Weapons_SpawnFrame(int ref)
 }
 
 #if defined IS_MAIN_FF2
-static ConfigMap FindWeaponSection(int entity, const char[] loadou, char custom[64] = "", int client = 0, bool &temp = false)
+// custom must be a real buffer: SourcePawn 2 binds a "" default to the literal itself, so writes corrupt it
+static ConfigMap FindWeaponSection(int entity, const char[] loadou, char custom[64], int client = 0, bool &temp = false)
 #else
-static ConfigMap FindWeaponSection(int entity, char custom[64] = "", int client = 0)
+static ConfigMap FindWeaponSection(int entity, char custom[64], int client = 0)
 #endif
 {
 	char buffer1[64];
@@ -913,7 +915,7 @@ void Weapons_ChangeMenu(int client, int time = MENU_TIME_FOREVER, int page = 0)
 			
 			Menu menu = new Menu(Weapons_ChangeMenuH);
 			
-			char buffer1[32], buffer2[32], loadout[32];
+			char buffer1[32], buffer2[32], loadout[32], custom[64];
 			Client(client).GetLoadout(loadout, sizeof(loadout));
 			int loadouts = LoadoutList.Length;
 
@@ -948,7 +950,7 @@ void Weapons_ChangeMenu(int client, int time = MENU_TIME_FOREVER, int page = 0)
 				
 				int entity = TF2U_GetPlayerLoadoutEntity(client, i);
 				
-				if(entity != -1 && FindWeaponSection(entity, loadout, _, client))
+				if(entity != -1 && FindWeaponSection(entity, loadout, custom, client))
 				{
 					IntToString(EntIndexToEntRef(entity), buffer1, sizeof(buffer1));
 					menu.AddItem(buffer1, buffer2);
