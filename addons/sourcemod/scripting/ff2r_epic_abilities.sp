@@ -2833,11 +2833,16 @@ bool JumperTestJump(int client, bool success)
 		
 		if(!jumped)
 		{
-			JumperAttribApply(client, "move speed bonus", 107, WallSpeedMulti[client], ability.GetFloat("double_speed", 1.0));
-			JumperAttribApply(client, "major increased jump height", 443, WallJumpMulti[client], ability.GetFloat("double_jump", 1.0));
-			
-			if(!WallInLagComp)
-				JumperAttribApply(client, "increased air control", 610, WallAirMulti[client], ability.GetFloat("double_air", 1.0));
+			// Double jump bonuses only when an air jump is actually available, otherwise
+			// the per-tick lag comp probe applies them whenever the boss is airborne
+			if(success)
+			{
+				JumperAttribApply(client, "move speed bonus", 107, WallSpeedMulti[client], ability.GetFloat("double_speed", 1.0));
+				JumperAttribApply(client, "major increased jump height", 443, WallJumpMulti[client], ability.GetFloat("double_jump", 1.0));
+				
+				if(!WallInLagComp)
+					JumperAttribApply(client, "increased air control", 610, WallAirMulti[client], ability.GetFloat("double_air", 1.0));
+			}
 		}
 		else if(!WallInLagComp)
 		{
