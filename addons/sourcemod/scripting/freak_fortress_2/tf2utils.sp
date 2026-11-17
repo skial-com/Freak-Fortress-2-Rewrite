@@ -197,7 +197,7 @@ stock int TF2U_GetPlayerLoadoutEntity(int client, int loadoutSlot, bool includeW
 					switch(defindex)
 					{
 						case 405, 608:
-							break;
+							return entity;
 					}
 				}
 			}
@@ -210,7 +210,7 @@ stock int TF2U_GetPlayerLoadoutEntity(int client, int loadoutSlot, bool includeW
 					switch(defindex)
 					{
 						case 133, 444, 131, 406, 1099, 1144, 57, 231, 642:
-							break;
+							return entity;
 					}
 				}
 			}
